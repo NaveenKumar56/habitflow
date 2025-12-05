@@ -1,3 +1,4 @@
+
 export interface Habit {
   id: string;
   title: string;
@@ -23,8 +24,9 @@ export interface DayStat {
 
 export interface User {
   username: string;
-  password: string; // Stored locally, ideally hashed but plain for this demo
+  password: string; 
   displayName: string;
+  role?: 'admin' | 'user'; // Added role
 }
 
 export type Language = 'en' | 'ja';

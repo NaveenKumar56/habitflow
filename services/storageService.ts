@@ -1,3 +1,4 @@
+
 import { Habit, User } from '../types';
 import { DEFAULT_HABITS } from '../constants';
 
@@ -16,9 +17,19 @@ export const getUsers = (): User[] => {
 
 export const addUser = (user: User): boolean => {
   const users = getUsers();
-  if (users.find(u => u.username === user.username)) {
+  // Case-insensitive check for existing user
+  if (users.find(u => u.username.toLowerCase() === user.username.toLowerCase())) {
     return false; // User exists
   }
+  
+  // Assign role
+  // If username is 'admin', assign admin role
+  if (user.username.toLowerCase() === 'admin') {
+    user.role = 'admin';
+  } else {
+    user.role = 'user';
+  }
+
   users.push(user);
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
   // Initialize default habits for new user
@@ -28,8 +39,19 @@ export const addUser = (user: User): boolean => {
 
 export const verifyUser = (username: string, password: string): User | null => {
   const users = getUsers();
-  const user = users.find(u => u.username === username && u.password === password);
+  const user = users.find(u => 
+    u.username.toLowerCase() === username.toLowerCase() && u.password === password
+  );
   return user || null;
+};
+
+export const deleteUserAccount = (targetUsername: string) => {
+  let users = getUsers();
+  users = users.filter(u => u.username.toLowerCase() !== targetUsername.toLowerCase());
+  localStorage.setItem(USERS_KEY, JSON.stringify(users));
+  localStorage.removeItem(`${DATA_PREFIX}${targetUsername}`);
+  
+  // If the deleted user was the session user, this will be caught by app refresh
 };
 
 // --- Session Management ---
@@ -46,8 +68,16 @@ export const setSession = (username: string, remember: boolean) => {
 export const getSessionUser = (): User | null => {
   let username = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
   if (!username) return null;
+  
   const users = getUsers();
-  return users.find(u => u.username === username) || null;
+  const user = users.find(u => u.username.toLowerCase() === username.toLowerCase());
+  
+  // If user found in session but not in DB (e.g. deleted), clear session
+  if (!user) {
+    clearSession();
+    return null;
+  }
+  return user;
 };
 
 export const clearSession = () => {

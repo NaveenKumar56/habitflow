@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { User, Language } from '../types';
 import { addUser, verifyUser, setSession } from '../services/storageService';
@@ -86,7 +87,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLogin, lang, setLang, dark
 
         <form onSubmit={handleSubmit} className="p-8 space-y-4">
           {error && (
-            <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm rounded-lg text-center">
+            <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm rounded-lg text-center animate-pulse">
               {error}
             </div>
           )}
@@ -95,6 +96,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLogin, lang, setLang, dark
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">{t.username}</label>
             <input 
               type="text"
+              name="username"
+              autoComplete="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none transition-all dark:text-white"
@@ -107,6 +110,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLogin, lang, setLang, dark
               <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">{t.display_name}</label>
               <input 
                 type="text"
+                name="displayName"
+                autoComplete="name"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none transition-all dark:text-white"
@@ -120,6 +125,8 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLogin, lang, setLang, dark
             <div className="relative">
               <input 
                 type={showPassword ? "text" : "password"}
+                name="password"
+                autoComplete={isLogin ? "current-password" : "new-password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none transition-all dark:text-white pr-10"
@@ -129,6 +136,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLogin, lang, setLang, dark
                 type="button" 
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
+                tabIndex={-1}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -141,9 +149,9 @@ export const AuthView: React.FC<AuthViewProps> = ({ onLogin, lang, setLang, dark
               id="remember" 
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
-              className="w-4 h-4 text-orange-600 border-slate-300 rounded focus:ring-orange-500"
+              className="w-4 h-4 text-orange-600 border-slate-300 rounded focus:ring-orange-500 cursor-pointer"
             />
-            <label htmlFor="remember" className="ml-2 text-sm text-slate-600 dark:text-slate-400">{t.remember_me}</label>
+            <label htmlFor="remember" className="ml-2 text-sm text-slate-600 dark:text-slate-400 cursor-pointer">{t.remember_me}</label>
           </div>
 
           <button 

@@ -1,14 +1,16 @@
+
 import React, { useState, useEffect } from 'react';
-import { Plus, LayoutDashboard, BarChart2, User as UserIcon, ChevronLeft, ChevronRight, Moon, Sun, Languages, LogOut } from 'lucide-react';
+import { Plus, LayoutDashboard, BarChart2, User as UserIcon, ChevronLeft, ChevronRight, Moon, Sun, Languages, LogOut, Shield } from 'lucide-react';
 import { format, addWeeks, addDays } from 'date-fns';
 import { Habit, HabitCategory, User, Language } from './types';
-import { loadHabits, saveHabits as saveLocal, getSessionUser, clearSession } from './services/storageService';
+import { loadHabits, saveHabits as saveLocal, getSessionUser, clearSession, getUsers, deleteUserAccount } from './services/storageService';
 import { TRANSLATIONS } from './constants';
 import { AddHabitModal } from './components/AddHabitModal';
 import { ChartsView } from './components/ChartsView';
 import { WeeklyHeatmap } from './components/WeeklyHeatmap';
 import { ProfileView } from './components/ProfileView';
 import { AuthView } from './components/AuthView';
+import { AdminView } from './components/AdminView';
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -30,8 +32,11 @@ const App: React.FC = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   
+  // Admin State
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+  
   // UI State
-  const [view, setView] = useState<'dashboard' | 'stats' | 'profile'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'stats' | 'profile' | 'admin'>('dashboard');
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Settings State
@@ -64,6 +69,11 @@ const App: React.FC = () => {
       setCurrentUser(user);
       const userHabits = loadHabits(user.username);
       setHabits(userHabits);
+      
+      // Load admin data if applicable
+      if (user.role === 'admin') {
+        setAllUsers(getUsers());
+      }
     }
   }, []);
 
@@ -71,6 +81,9 @@ const App: React.FC = () => {
     setCurrentUser(user);
     const userHabits = loadHabits(user.username);
     setHabits(userHabits);
+    if (user.role === 'admin') {
+      setAllUsers(getUsers());
+    }
     setView('dashboard');
   };
 
@@ -78,6 +91,7 @@ const App: React.FC = () => {
     clearSession();
     setCurrentUser(null);
     setHabits([]);
+    setAllUsers([]);
   };
 
   // Data Operations
@@ -125,6 +139,14 @@ const App: React.FC = () => {
   const handleClearData = () => {
     if (window.confirm(t.delete_confirm)) {
       saveAll([]);
+    }
+  };
+
+  // Admin Operations
+  const handleDeleteUser = (username: string) => {
+    if (window.confirm(t.delete_user_confirm)) {
+      deleteUserAccount(username);
+      setAllUsers(getUsers());
     }
   };
 
@@ -194,7 +216,7 @@ const App: React.FC = () => {
 
            <button
             onClick={() => setView('profile')}
-            className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all ${
+            className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mb-1 ${
               view === 'profile' 
                 ? 'bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 font-medium' 
                 : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -203,6 +225,20 @@ const App: React.FC = () => {
             <UserIcon size={20} />
             <span>{t.profile}</span>
           </button>
+
+          {currentUser.role === 'admin' && (
+            <button
+              onClick={() => setView('admin')}
+              className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mt-4 ${
+                view === 'admin' 
+                  ? 'bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300 font-medium' 
+                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Shield size={20} />
+              <span>{t.admin}</span>
+            </button>
+          )}
         </nav>
 
         <div className="p-4 hidden md:block mt-auto space-y-4">
@@ -251,11 +287,13 @@ const App: React.FC = () => {
               {view === 'dashboard' && t.weekly_focus}
               {view === 'stats' && t.performance}
               {view === 'profile' && t.profile}
+              {view === 'admin' && t.admin}
             </h1>
             <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
               {view === 'dashboard' && t.track_desc}
               {view === 'stats' && t.analyze_desc}
               {view === 'profile' && t.manage_desc}
+              {view === 'admin' && t.admin_desc}
             </p>
           </div>
 
@@ -302,6 +340,14 @@ const App: React.FC = () => {
               habits={habits}
               onImport={handleImportData}
               onClearData={handleClearData}
+              lang={lang}
+            />
+          )}
+
+          {view === 'admin' && currentUser.role === 'admin' && (
+            <AdminView 
+              users={allUsers}
+              onDeleteUser={handleDeleteUser}
               lang={lang}
             />
           )}

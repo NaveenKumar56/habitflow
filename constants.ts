@@ -1,3 +1,4 @@
+
 import { HabitCategory, Language } from './types';
 
 export const CATEGORIES: HabitCategory[] = [
@@ -45,10 +46,12 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     profile: 'Profile',
     stats: 'Statistics',
     settings: 'Settings',
+    admin: 'Admin',
     new_habit: 'New Habit',
     track_desc: 'Track your consistency day by day.',
     analyze_desc: 'Analyze your long-term progress.',
     manage_desc: 'Manage your account and data.',
+    admin_desc: 'Manage users and system settings.',
     habit_title: 'Habit Title',
     category: 'Category',
     create: 'Create Habit',
@@ -87,7 +90,12 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     local_management_desc: 'Manage your data locally.',
     danger_zone: 'Danger Zone',
     delete_all_desc: 'Permanently delete all habits.',
-    guest: 'Guest'
+    guest: 'Guest',
+    users_list: 'Users List',
+    total_users: 'Total Users',
+    actions: 'Actions',
+    delete_user: 'Delete User',
+    delete_user_confirm: 'Are you sure you want to delete this user and ALL their data? This cannot be undone.'
   },
   ja: {
     app_name: '夕日トラッカー',
@@ -96,10 +104,12 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     profile: 'プロフィール',
     stats: '統計',
     settings: '設定',
+    admin: '管理',
     new_habit: '新しい習慣',
     track_desc: '日々の継続を記録しましょう。',
     analyze_desc: '長期的な進捗を分析します。',
     manage_desc: 'アカウントとデータを管理します。',
+    admin_desc: 'ユーザーとシステム設定を管理します。',
     habit_title: '習慣のタイトル',
     category: 'カテゴリー',
     create: '作成する',
@@ -138,6 +148,11 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     local_management_desc: 'ローカルデータを管理します。',
     danger_zone: '危険エリア',
     delete_all_desc: 'すべての習慣を完全に削除します。',
-    guest: 'ゲスト'
+    guest: 'ゲスト',
+    users_list: 'ユーザーリスト',
+    total_users: '総ユーザー数',
+    actions: '操作',
+    delete_user: 'ユーザーを削除',
+    delete_user_confirm: 'このユーザーとすべてのデータを削除してもよろしいですか？この操作は取り消せません。'
   }
 };
