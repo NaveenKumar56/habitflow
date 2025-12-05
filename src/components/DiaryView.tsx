@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { DiaryEntry, Language } from '../types';
 import { TRANSLATIONS } from '../constants';
@@ -17,6 +18,7 @@ export const DiaryView: React.FC<DiaryViewProps> = ({ lang }) => {
   
   const [content, setContent] = useState('');
   const [mood, setMood] = useState<DiaryEntry['mood']>('neutral');
+  const [isSaving, setIsSaving] = useState(false);
   
   const t = TRANSLATIONS[lang];
   const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
@@ -47,8 +49,10 @@ export const DiaryView: React.FC<DiaryViewProps> = ({ lang }) => {
 
   const handleSave = async () => {
     if (!content.trim()) return;
+    setIsSaving(true);
 
     const existingEntry = entries.find(e => e.date === selectedDateStr);
+    const originalEntries = [...entries];
     
     const newEntry: DiaryEntry = {
         id: existingEntry ? existingEntry.id : crypto.randomUUID(),
@@ -58,13 +62,23 @@ export const DiaryView: React.FC<DiaryViewProps> = ({ lang }) => {
         createdAt: new Date().toISOString()
     };
 
+    // Optimistic Update
     const updatedEntries = existingEntry 
       ? entries.map(e => e.date === selectedDateStr ? newEntry : e)
       : [newEntry, ...entries];
       
     setEntries(updatedEntries);
-    await saveDiaryEntry(newEntry);
-    alert(t.entry_saved);
+
+    const { error } = await saveDiaryEntry(newEntry);
+    
+    if (error) {
+        // Revert on failure
+        setEntries(originalEntries);
+        alert('Failed to save diary entry. Please check your connection or database setup.');
+    } else {
+        alert(t.entry_saved);
+    }
+    setIsSaving(false);
   };
 
   const getMoodIcon = (m: string) => {
@@ -121,10 +135,11 @@ export const DiaryView: React.FC<DiaryViewProps> = ({ lang }) => {
               </h2>
               <button 
                   onClick={handleSave}
-                  className="flex items-center gap-2 px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-medium transition-colors shadow-lg shadow-orange-200 dark:shadow-none"
+                  disabled={isSaving}
+                  className="flex items-center gap-2 px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-medium transition-colors shadow-lg shadow-orange-200 dark:shadow-none disabled:opacity-50"
               >
-                  <Save size={18} />
-                  {t.save_entry}
+                <Save size={18} />
+                {isSaving ? 'Saving...' : t.save_entry}
               </button>
             </div>
             

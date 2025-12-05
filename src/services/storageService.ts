@@ -2,6 +2,14 @@
 import { supabase } from '../lib/supabase';
 import { Habit, DiaryEntry, Todo } from '../types';
 
+// --- Database Health Check ---
+
+export const checkDatabaseConnection = async () => {
+  // Try to access the habits table. If it doesn't exist, Supabase returns a specific error (404/PGRST205)
+  const { error } = await supabase.from('habits').select('id').limit(1);
+  return error;
+};
+
 // --- Cloud Data Management (Supabase) ---
 
 export const loadHabits = async (): Promise<Habit[]> => {
@@ -13,7 +21,7 @@ export const loadHabits = async (): Promise<Habit[]> => {
 
     if (error) {
       console.error("Error loading habits:", error);
-      return [];
+      throw error;
     }
 
     return (data as any[]).map(h => ({
@@ -33,7 +41,7 @@ export const loadHabits = async (): Promise<Habit[]> => {
 
 export const saveHabitToCloud = async (habit: Habit) => {
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!user) return { error: { message: "No user logged in" } };
 
   const { error } = await supabase
     .from('habits')
@@ -48,6 +56,7 @@ export const saveHabitToCloud = async (habit: Habit) => {
     });
 
   if (error) console.error("Error saving habit:", error);
+  return { error };
 };
 
 export const deleteHabitFromCloud = async (id: string) => {
@@ -57,11 +66,12 @@ export const deleteHabitFromCloud = async (id: string) => {
     .eq('id', id);
   
   if (error) console.error("Error deleting habit:", error);
+  return { error };
 };
 
 export const syncAllHabits = async (habits: Habit[]) => {
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!user) return { error: { message: "No user logged in" } };
 
   const records = habits.map(h => ({
     id: h.id,
@@ -75,18 +85,22 @@ export const syncAllHabits = async (habits: Habit[]) => {
 
   const { error } = await supabase.from('habits').upsert(records);
   if (error) console.error("Error syncing habits:", error);
+  return { error };
 };
 
 export const clearAllCloudData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    if (!user) return { error: { message: "No user logged in" } };
     
     // Execute deletions in parallel
-    await Promise.all([
+    const results = await Promise.all([
       supabase.from('habits').delete().eq('user_id', user.id),
       supabase.from('diary_entries').delete().eq('user_id', user.id),
       supabase.from('todos').delete().eq('user_id', user.id)
     ]);
+
+    const error = results.find(r => r.error)?.error;
+    return { error };
 };
 
 // --- Diary Management ---
@@ -98,10 +112,7 @@ export const loadDiaryEntries = async (): Promise<DiaryEntry[]> => {
             .select('*')
             .order('date', { ascending: false });
 
-        if (error) {
-            console.error("Error loading diary:", error);
-            return [];
-        }
+        if (error) throw error;
 
         return (data as any[]).map(d => ({
             id: d.id,
@@ -118,7 +129,7 @@ export const loadDiaryEntries = async (): Promise<DiaryEntry[]> => {
 
 export const saveDiaryEntry = async (entry: DiaryEntry) => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { error: "No user logged in" };
+    if (!user) return { error: { message: "No user logged in" } };
 
     const { error } = await supabase
         .from('diary_entries')
@@ -163,7 +174,7 @@ export const loadTodos = async (): Promise<Todo[]> => {
 
 export const saveTodo = async (todo: Todo) => {
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "No user logged in" };
+  if (!user) return { error: { message: "No user logged in" } };
 
   const { error } = await supabase
     .from('todos')
@@ -185,4 +196,5 @@ export const saveTodo = async (todo: Todo) => {
 export const deleteTodo = async (id: string) => {
   const { error } = await supabase.from('todos').delete().eq('id', id);
   if (error) console.error("Error deleting todo:", error);
+  return { error };
 };

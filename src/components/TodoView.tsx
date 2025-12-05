@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Todo, Language } from '../types';
 import { TRANSLATIONS } from '../constants';
@@ -37,11 +38,12 @@ export const TodoView: React.FC<TodoViewProps> = ({ lang }) => {
     const { error: saveError } = await saveTodo(newTodo);
     if (saveError) {
         setTodos(prevTodos);
-        setError('Failed to save task. Check your connection or table.');
+        setError('Failed to save task. Database table might be missing.');
     }
   };
 
   const handleToggle = async (id: string) => {
+    const originalTodos = [...todos];
     const updated = todos.map(t => 
       t.id === id ? { ...t, completed: !t.completed } : t
     );
@@ -50,13 +52,22 @@ export const TodoView: React.FC<TodoViewProps> = ({ lang }) => {
     const target = updated.find(t => t.id === id);
     if (target) {
         const { error: saveError } = await saveTodo(target);
-        if (saveError) setError('Sync error.');
+        if (saveError) {
+            setTodos(originalTodos);
+            setError('Sync error. Changes reverted.');
+        }
     }
   };
 
   const handleDelete = async (id: string) => {
+    const originalTodos = [...todos];
     setTodos(todos.filter(t => t.id !== id));
-    await deleteTodo(id);
+    
+    const { error: deleteError } = await deleteTodo(id);
+    if (deleteError) {
+         setTodos(originalTodos);
+         setError('Failed to delete task.');
+    }
   };
 
   const activeTodos = todos.filter(t => !t.completed);
@@ -74,8 +85,8 @@ export const TodoView: React.FC<TodoViewProps> = ({ lang }) => {
         </div>
 
         {error && (
-            <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg flex items-center gap-2 text-sm">
-                <AlertTriangle size={16} />
+            <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 rounded-xl flex items-center gap-2 text-sm font-medium animate-pulse">
+                <AlertTriangle size={18} />
                 {error}
             </div>
         )}

@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { Plus, LayoutDashboard, BarChart2, User as UserIcon, ChevronLeft, ChevronRight, Moon, Sun, Languages, LogOut, Shield, Menu, PanelLeftClose, Book, ListTodo, Download } from 'lucide-react';
 import { format, addWeeks, addDays } from 'date-fns';
 import { Habit, HabitCategory, User, Language } from './types';
-import { loadHabits, saveHabitToCloud, deleteHabitFromCloud, syncAllHabits, clearAllCloudData } from './services/storageService';
+import { loadHabits, saveHabitToCloud, deleteHabitFromCloud, syncAllHabits, clearAllCloudData, checkDatabaseConnection } from './services/storageService';
 import { supabase } from './lib/supabase';
 import { TRANSLATIONS } from './constants';
 import { AddHabitModal } from './components/AddHabitModal';
@@ -13,6 +14,7 @@ import { AuthView } from './components/AuthView';
 import { AdminView } from './components/AdminView';
 import { DiaryView } from './components/DiaryView';
 import { TodoView } from './components/TodoView';
+import { DatabaseErrorView } from './components/DatabaseErrorView';
 
 const generateId = () => crypto.randomUUID();
 
@@ -29,6 +31,7 @@ const getEndOfWeek = (date: Date) => {
 const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [dbError, setDbError] = useState(false);
   
   const [habits, setHabits] = useState<Habit[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -60,20 +63,27 @@ const App: React.FC = () => {
     }
   }, [darkMode]);
 
-  useEffect(() => {
-    // Check initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setCurrentUser({ 
-            id: session.user.id, 
-            email: session.user.email || '',
-            role: session.user.email === 'naveenzcnk@gmail.com' ? 'admin' : 'user'
-        });
+  const initSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      setCurrentUser({ 
+          id: session.user.id, 
+          email: session.user.email || '',
+          role: session.user.email === 'naveenzcnk@gmail.com' ? 'admin' : 'user'
+      });
+      
+      // Check database health
+      const error = await checkDatabaseConnection();
+      if (error && (error.code === 'PGRST205' || error.code === '42P01')) {
+        setDbError(true);
       }
-      setLoading(false);
-    });
+    }
+    setLoading(false);
+  };
 
-    // Listen for auth changes
+  useEffect(() => {
+    initSession();
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -82,6 +92,10 @@ const App: React.FC = () => {
             id: session.user.id, 
             email: session.user.email || '',
             role: session.user.email === 'naveenzcnk@gmail.com' ? 'admin' : 'user'
+        });
+        setDbError(false); // Reset error on login to re-check
+        checkDatabaseConnection().then(err => {
+             if (err && (err.code === 'PGRST205' || err.code === '42P01')) setDbError(true);
         });
       } else {
         setCurrentUser(null);
@@ -111,10 +125,10 @@ const App: React.FC = () => {
 
   // Load Habits when user changes
   useEffect(() => {
-    if (currentUser) {
+    if (currentUser && !dbError) {
       loadHabits().then(data => setHabits(data));
     }
-  }, [currentUser]);
+  }, [currentUser, dbError]);
 
 
   const handleLogout = async () => {
@@ -122,6 +136,8 @@ const App: React.FC = () => {
   };
 
   const toggleHabit = async (id: string, dateStr: string) => {
+    const originalHabits = [...habits];
+    
     const updatedHabits = habits.map(habit => {
       if (habit.id !== id) return habit;
       const newLogs = { ...habit.logs };
@@ -135,7 +151,11 @@ const App: React.FC = () => {
     // Save to Cloud
     const changedHabit = updatedHabits.find(h => h.id === id);
     if (changedHabit) {
-        await saveHabitToCloud(changedHabit);
+        const { error } = await saveHabitToCloud(changedHabit);
+        if (error) {
+            setHabits(originalHabits); // Revert on failure
+            alert('Failed to save habit status. Please check your connection.');
+        }
     }
   };
 
@@ -150,27 +170,47 @@ const App: React.FC = () => {
     };
     
     setHabits(prev => [...prev, newHabit]);
-    await saveHabitToCloud(newHabit);
+    const { error } = await saveHabitToCloud(newHabit);
+    
+    if (error) {
+        setHabits(prev => prev.filter(h => h.id !== newHabit.id)); // Revert
+        alert('Failed to create habit. Please check your connection.');
+    }
   };
 
   const deleteHabit = async (id: string) => {
     if (window.confirm(t.delete_confirm)) {
+      const originalHabits = [...habits];
       setHabits(prev => prev.filter(h => h.id !== id));
-      await deleteHabitFromCloud(id);
+      
+      const { error } = await deleteHabitFromCloud(id);
+      if (error) {
+          setHabits(originalHabits);
+          alert('Failed to delete habit.');
+      }
     }
   };
 
   // Import local JSON backup to Cloud
   const handleImportData = async (importedHabits: Habit[]) => {
     setHabits(importedHabits);
-    await syncAllHabits(importedHabits);
-    alert('Data imported and synced to database!');
+    const { error } = await syncAllHabits(importedHabits);
+    if (!error) {
+        alert('Data imported and synced to database!');
+    } else {
+        alert('Data imported locally but failed to sync to database.');
+    }
   };
 
   const handleClearData = async () => {
     if (window.confirm(t.delete_confirm)) {
+      const originalHabits = [...habits];
       setHabits([]);
-      await clearAllCloudData();
+      const { error } = await clearAllCloudData();
+      if (error) {
+          setHabits(originalHabits);
+          alert('Failed to clear data from database.');
+      }
     }
   };
 
@@ -192,6 +232,14 @@ const App: React.FC = () => {
         toggleTheme={() => setDarkMode(!darkMode)}
       />
     );
+  }
+
+  // Show Database Error View if tables are missing
+  if (dbError) {
+    return <DatabaseErrorView onRetry={() => {
+        setLoading(true);
+        initSession();
+    }} />;
   }
 
   const weekStart = getStartOfWeek(currentDate);
