@@ -45,16 +45,16 @@ export const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({ habits, currentDat
   };
 
   return (
-    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col transition-colors duration-200 overflow-hidden">
+    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col transition-colors duration-200 overflow-hidden">
       
       {/* Scrollable Container */}
-      <div class="overflow-x-auto no-scrollbar">
-        <div class="min-w-[800px] inline-block w-full align-middle">
+      <div className="overflow-x-auto no-scrollbar">
+        <div className="min-w-[800px] inline-block w-full align-middle">
           
           {/* Header Row */}
-          <div class="grid grid-cols-[200px_repeat(7,1fr)] border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 sticky top-0 z-10">
+          <div className="grid grid-cols-[200px_repeat(7,1fr)] border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 sticky top-0 z-10">
             {/* Sticky Habit Title Header */}
-            <div class="p-4 font-medium text-slate-500 dark:text-slate-400 text-sm flex items-center sticky left-0 bg-slate-50 dark:bg-slate-900 z-20 border-r border-slate-100 dark:border-slate-800 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)]">
+            <div className="p-4 font-medium text-slate-500 dark:text-slate-400 text-sm flex items-center sticky left-0 bg-slate-50 dark:bg-slate-900 z-20 border-r border-slate-100 dark:border-slate-800 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)]">
               {t.habit_title}
             </div>
             
@@ -62,11 +62,11 @@ export const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({ habits, currentDat
             {weekDays.map((day) => {
               const isToday = isSameDay(day, today);
               return (
-                <div key={day.toString()} class={`p-3 text-center flex flex-col items-center justify-center border-l border-slate-100 dark:border-slate-800 ${isToday ? 'bg-orange-50/50 dark:bg-orange-500/10' : ''}`}>
-                  <span class={`text-xs font-semibold mb-1 ${isToday ? 'text-orange-600 dark:text-orange-400' : 'text-slate-400 dark:text-slate-500'}`}>
+                <div key={day.toString()} className={`p-3 text-center flex flex-col items-center justify-center border-l border-slate-100 dark:border-slate-800 ${isToday ? 'bg-orange-50/50 dark:bg-orange-500/10' : ''}`}>
+                  <span className={`text-xs font-semibold mb-1 ${isToday ? 'text-orange-600 dark:text-orange-400' : 'text-slate-400 dark:text-slate-500'}`}>
                     {format(day, 'EEE')}
                   </span>
-                  <div class={`
+                  <div className={`
                     w-8 h-8 flex items-center justify-center rounded-full text-sm font-medium transition-colors
                     ${isToday ? 'bg-orange-500 text-white shadow-md shadow-orange-200 dark:shadow-none' : 'text-slate-700 dark:text-slate-300'}
                   `}>
@@ -78,9 +78,9 @@ export const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({ habits, currentDat
           </div>
 
           {/* Habit Rows */}
-          <div class="divide-y divide-slate-100 dark:divide-slate-800">
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
             {habits.length === 0 ? (
-              <div class="p-12 text-center text-slate-400 dark:text-slate-500">
+              <div className="p-12 text-center text-slate-400 dark:text-slate-500">
                 {t.no_habits}
               </div>
             ) : habits.map((habit) => {
@@ -88,24 +88,24 @@ export const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({ habits, currentDat
               const streak = calculateStreak(habit);
               
               return (
-                <div key={habit.id} class="grid grid-cols-[200px_repeat(7,1fr)] group hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors">
+                <div key={habit.id} className="grid grid-cols-[200px_repeat(7,1fr)] group hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors">
                   
                   {/* Sticky Habit Info Column */}
-                  <div class="p-4 flex flex-col justify-center sticky left-0 bg-white dark:bg-slate-900 z-10 border-r border-slate-100 dark:border-slate-800 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)] group-hover:bg-slate-50 dark:group-hover:bg-slate-900 transition-colors">
-                    <div class="flex justify-between items-start">
-                      <div class="w-full">
-                        <h3 class="font-semibold text-slate-800 dark:text-slate-200 text-sm truncate pr-2 mb-1" title={habit.title}>
+                  <div className="p-4 flex flex-col justify-center sticky left-0 bg-white dark:bg-slate-900 z-10 border-r border-slate-100 dark:border-slate-800 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)] group-hover:bg-slate-50 dark:group-hover:bg-slate-900 transition-colors">
+                    <div className="flex justify-between items-start">
+                      <div className="w-full">
+                        <h3 className="font-semibold text-slate-800 dark:text-slate-200 text-sm truncate pr-2 mb-1" title={habit.title}>
                           {habit.title}
                         </h3>
-                        <div class="flex items-center justify-between mt-1">
-                          <span class={`text-[10px] px-1.5 py-0.5 rounded-full border ${categoryColor}`}>
+                        <div className="flex items-center justify-between mt-1">
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full border ${categoryColor}`}>
                             {habit.category}
                           </span>
                           
                           {/* Streak Badge */}
                           {streak > 0 && (
-                            <div class="flex items-center text-xs font-bold text-orange-500 dark:text-orange-400" title={`${streak} day streak`}>
-                              <Flame size={12} class="fill-orange-500 mr-0.5" />
+                            <div className="flex items-center text-xs font-bold text-orange-500 dark:text-orange-400" title={`${streak} day streak`}>
+                              <Flame size={12} className="fill-orange-500 mr-0.5" />
                               {streak}
                             </div>
                           )}
@@ -115,7 +115,7 @@ export const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({ habits, currentDat
                       {onDelete && (
                         <button 
                           onClick={() => onDelete(habit.id)}
-                          class="absolute top-2 right-2 text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-slate-900 p-1 rounded-md"
+                          className="absolute top-2 right-2 text-slate-300 dark:text-slate-600 hover:text-red-500 dark:hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-slate-900 p-1 rounded-md"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -130,11 +130,11 @@ export const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({ habits, currentDat
                     const isFuture = day > today;
 
                     return (
-                      <div key={dateStr} class="p-2 border-l border-slate-100 dark:border-slate-800 flex items-center justify-center">
+                      <div key={dateStr} className="p-2 border-l border-slate-100 dark:border-slate-800 flex items-center justify-center">
                         <button
                           onClick={() => !isFuture && onToggle(habit.id, dateStr)}
                           disabled={isFuture}
-                          class={`
+                          className={`
                             w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200
                             ${isCompleted 
                               ? 'bg-orange-500 text-white shadow-sm scale-100' 
