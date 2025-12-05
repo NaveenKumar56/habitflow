@@ -51,80 +51,80 @@ export const AuthView: React.FC<AuthViewProps> = ({ lang, setLang, darkMode, tog
   };
 
   return (
-    <div class="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4 transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-4 transition-colors duration-200">
       
       {/* Top Controls */}
-      <div class="absolute top-4 right-4 flex items-center space-x-2">
+      <div className="absolute top-4 right-4 flex items-center space-x-2">
         <button 
             onClick={() => setLang(lang === 'en' ? 'ja' : 'en')}
-            class="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
+            className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
           >
             <Languages size={18} />
             {lang === 'en' ? '日本語' : 'English'}
         </button>
         <button 
           onClick={toggleTheme}
-          class="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors"
+          className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors"
         >
           {darkMode ? <Sun size={18} /> : <Moon size={18} />}
         </button>
       </div>
 
-      <div class="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-        <div class="p-8 text-center border-b border-slate-100 dark:border-slate-800">
-           <div class="w-16 h-16 bg-gradient-to-br from-orange-400 to-red-500 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg shadow-orange-200 dark:shadow-none">
-              <div class="w-6 h-6 bg-white/20 rounded-full" />
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+        <div className="p-8 text-center border-b border-slate-100 dark:border-slate-800">
+           <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-red-500 rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg shadow-orange-200 dark:shadow-none">
+              <div className="w-6 h-6 bg-white/20 rounded-full" />
            </div>
-           <h1 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+           <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
              {t.app_name}
            </h1>
-           <p class="text-slate-500 dark:text-slate-400">
+           <p className="text-slate-500 dark:text-slate-400">
              {isLogin ? t.welcome_back : t.get_started}
            </p>
         </div>
 
-        <form onSubmit={handleSubmit} class="p-8 space-y-4">
+        <form onSubmit={handleSubmit} className="p-8 space-y-4">
           {error && (
-            <div class="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm rounded-lg text-center animate-pulse">
+            <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm rounded-lg text-center animate-pulse">
               {error}
             </div>
           )}
           {message && (
-             <div class="p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-sm rounded-lg text-center">
+             <div className="p-3 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 text-sm rounded-lg text-center">
              {message}
            </div>
           )}
 
           <div>
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Email</label>
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Email</label>
             <input 
               type="email"
               name="email"
-              autocomplete="email"
+              autoComplete="email"
               value={email}
               onChange={(e) => setEmail((e.target as HTMLInputElement).value)}
-              class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none transition-all dark:text-white"
+              className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none transition-all dark:text-white"
               required
             />
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">{t.password}</label>
-            <div class="relative">
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">{t.password}</label>
+            <div className="relative">
               <input 
                 type={showPassword ? "text" : "password"}
                 name="password"
-                autocomplete={isLogin ? "current-password" : "new-password"}
+                autoComplete={isLogin ? "current-password" : "new-password"}
                 value={password}
                 onChange={(e) => setPassword((e.target as HTMLInputElement).value)}
-                class="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none transition-all dark:text-white pr-10"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-lg focus:ring-2 focus:ring-orange-500 outline-none transition-all dark:text-white pr-10"
                 required
               />
               <button 
                 type="button" 
                 onClick={() => setShowPassword(!showPassword)}
-                class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
-                tabindex={-1}
+                className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
+                tabIndex={-1}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -134,18 +134,18 @@ export const AuthView: React.FC<AuthViewProps> = ({ lang, setLang, darkMode, tog
           <button 
             type="submit"
             disabled={loading}
-            class="w-full py-3 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-xl font-bold shadow-lg shadow-orange-200 dark:shadow-none transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-xl font-bold shadow-lg shadow-orange-200 dark:shadow-none transition-all transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Processing...' : (isLogin ? t.sign_in : t.sign_up)}
           </button>
         </form>
 
-        <div class="bg-slate-50 dark:bg-slate-950/50 p-4 text-center border-t border-slate-100 dark:border-slate-800">
-          <p class="text-sm text-slate-500 dark:text-slate-400">
+        <div className="bg-slate-50 dark:bg-slate-950/50 p-4 text-center border-t border-slate-100 dark:border-slate-800">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             {isLogin ? t.need_account : t.have_account}
             <button 
               onClick={() => { setIsLogin(!isLogin); setError(''); }}
-              class="ml-2 text-orange-600 dark:text-orange-400 font-bold hover:underline"
+              className="ml-2 text-orange-600 dark:text-orange-400 font-bold hover:underline"
             >
               {isLogin ? t.create_account : t.login}
             </button>

@@ -1,3 +1,4 @@
+
 import { supabase } from '../lib/supabase';
 import { Habit, DiaryEntry, Todo } from '../types';
 
@@ -31,7 +32,7 @@ export const loadHabits = async (): Promise<Habit[]> => {
 };
 
 export const saveHabitToCloud = async (habit: Habit) => {
-  const user = (await supabase.auth.getUser()).data.user;
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
 
   const { error } = await supabase
@@ -59,7 +60,7 @@ export const deleteHabitFromCloud = async (id: string) => {
 };
 
 export const syncAllHabits = async (habits: Habit[]) => {
-  const user = (await supabase.auth.getUser()).data.user;
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) return;
 
   const records = habits.map(h => ({
@@ -77,11 +78,15 @@ export const syncAllHabits = async (habits: Habit[]) => {
 };
 
 export const clearAllCloudData = async () => {
-    const user = (await supabase.auth.getUser()).data.user;
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    await supabase.from('habits').delete().eq('user_id', user.id);
-    await supabase.from('diary_entries').delete().eq('user_id', user.id);
-    await supabase.from('todos').delete().eq('user_id', user.id);
+    
+    // Execute deletions in parallel
+    await Promise.all([
+      supabase.from('habits').delete().eq('user_id', user.id),
+      supabase.from('diary_entries').delete().eq('user_id', user.id),
+      supabase.from('todos').delete().eq('user_id', user.id)
+    ]);
 };
 
 // --- Diary Management ---
@@ -112,7 +117,7 @@ export const loadDiaryEntries = async (): Promise<DiaryEntry[]> => {
 }
 
 export const saveDiaryEntry = async (entry: DiaryEntry) => {
-    const user = (await supabase.auth.getUser()).data.user;
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { error: "No user logged in" };
 
     const { error } = await supabase
@@ -157,7 +162,7 @@ export const loadTodos = async (): Promise<Todo[]> => {
 };
 
 export const saveTodo = async (todo: Todo) => {
-  const user = (await supabase.auth.getUser()).data.user;
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "No user logged in" };
 
   const { error } = await supabase

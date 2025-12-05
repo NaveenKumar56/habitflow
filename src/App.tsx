@@ -61,21 +61,19 @@ const App: React.FC = () => {
   }, [darkMode]);
 
   useEffect(() => {
-    const checkUserRole = (email: string | undefined) => {
-        return email === 'naveenzcnk@gmail.com' ? 'admin' : 'user';
-    };
-
+    // Check initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setCurrentUser({ 
             id: session.user.id, 
             email: session.user.email || '',
-            role: checkUserRole(session.user.email)
+            role: session.user.email === 'naveenzcnk@gmail.com' ? 'admin' : 'user'
         });
       }
       setLoading(false);
     });
 
+    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -83,7 +81,7 @@ const App: React.FC = () => {
         setCurrentUser({ 
             id: session.user.id, 
             email: session.user.email || '',
-            role: checkUserRole(session.user.email)
+            role: session.user.email === 'naveenzcnk@gmail.com' ? 'admin' : 'user'
         });
       } else {
         setCurrentUser(null);
@@ -94,6 +92,7 @@ const App: React.FC = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // PWA Install Prompt
   useEffect(() => {
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -110,6 +109,7 @@ const App: React.FC = () => {
     }
   };
 
+  // Load Habits when user changes
   useEffect(() => {
     if (currentUser) {
       loadHabits().then(data => setHabits(data));
@@ -132,6 +132,7 @@ const App: React.FC = () => {
     
     setHabits(updatedHabits); 
     
+    // Save to Cloud
     const changedHabit = updatedHabits.find(h => h.id === id);
     if (changedHabit) {
         await saveHabitToCloud(changedHabit);
@@ -159,10 +160,11 @@ const App: React.FC = () => {
     }
   };
 
+  // Import local JSON backup to Cloud
   const handleImportData = async (importedHabits: Habit[]) => {
     setHabits(importedHabits);
     await syncAllHabits(importedHabits);
-    alert('Data imported and synced to cloud!');
+    alert('Data imported and synced to database!');
   };
 
   const handleClearData = async () => {
@@ -173,7 +175,12 @@ const App: React.FC = () => {
   };
 
   if (loading) {
-      return <div class="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center dark:text-white">Loading...</div>;
+      return (
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center transition-colors">
+          <div className="w-12 h-12 bg-orange-500 rounded-lg animate-spin mb-4"></div>
+          <p className="text-slate-500 dark:text-slate-400 font-medium">Loading Yuuhi...</p>
+        </div>
+      );
   }
 
   if (!currentUser) {
@@ -192,50 +199,50 @@ const App: React.FC = () => {
   const weekRangeStr = `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`;
 
   return (
-    <div class="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col md:flex-row font-sans text-slate-900 dark:text-slate-100 transition-colors duration-200 relative">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col md:flex-row font-sans text-slate-900 dark:text-slate-100 transition-colors duration-200 relative">
       
       {!isSidebarVisible && (
         <button 
           onClick={() => setIsSidebarVisible(true)}
-          class="fixed top-4 left-4 z-50 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95"
+          className="fixed top-4 left-4 z-50 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95"
           title="Open Menu"
         >
-          <Menu size={24} class="text-slate-700 dark:text-slate-300" />
+          <Menu size={24} className="text-slate-700 dark:text-slate-300" />
         </button>
       )}
 
-      <aside class={`
+      <aside className={`
         bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 
         md:h-screen flex md:flex-col sticky top-0 z-40 transition-all duration-300 ease-in-out overflow-hidden
         ${isSidebarVisible ? 'w-full md:w-64 opacity-100' : 'w-0 opacity-0 p-0 border-none'}
       `}>
-        <div class="p-6 flex items-center justify-between">
-          <div class="flex items-center space-x-3">
-            <div class="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center shadow-lg shadow-orange-200 dark:shadow-none shrink-0">
-               <div class="w-3 h-3 bg-white/40 rounded-full" />
+        <div className="p-6 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center shadow-lg shadow-orange-200 dark:shadow-none shrink-0">
+               <div className="w-3 h-3 bg-white/40 rounded-full" />
             </div>
-            <span class="text-xl font-bold tracking-tight text-slate-900 dark:text-white whitespace-nowrap animate-in fade-in duration-200">{t.app_name}</span>
+            <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white whitespace-nowrap animate-in fade-in duration-200">{t.app_name}</span>
           </div>
 
           <button 
             onClick={() => setIsSidebarVisible(false)}
-            class="hidden md:block p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+            className="hidden md:block p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
           >
             <PanelLeftClose size={20} />
           </button>
 
           <button 
             onClick={() => setDarkMode(!darkMode)}
-            class="md:hidden p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+            className="md:hidden p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
           >
             {darkMode ? <Sun size={20} /> : <Moon size={20} />}
           </button>
         </div>
 
-        <nav class="flex-1 px-4 pb-4 flex md:flex-col overflow-x-auto md:overflow-visible gap-2 md:gap-1 min-w-[250px]">
+        <nav className="flex-1 px-4 pb-4 flex md:flex-col overflow-x-auto md:overflow-visible gap-2 md:gap-1 min-w-[250px] no-scrollbar">
           <button
             onClick={() => setView('dashboard')}
-            class={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mb-1 shrink-0 ${
+            className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mb-1 shrink-0 ${
               view === 'dashboard' 
                 ? 'bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 font-medium' 
                 : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -247,7 +254,7 @@ const App: React.FC = () => {
           
           <button
             onClick={() => setView('diary')}
-            class={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mb-1 shrink-0 ${
+            className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mb-1 shrink-0 ${
               view === 'diary' 
                 ? 'bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 font-medium' 
                 : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -259,7 +266,7 @@ const App: React.FC = () => {
 
           <button
             onClick={() => setView('tasks')}
-            class={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mb-1 shrink-0 ${
+            className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mb-1 shrink-0 ${
               view === 'tasks' 
                 ? 'bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 font-medium' 
                 : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -271,7 +278,7 @@ const App: React.FC = () => {
 
           <button
             onClick={() => setView('stats')}
-            class={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mb-1 shrink-0 ${
+            className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mb-1 shrink-0 ${
               view === 'stats' 
                 ? 'bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 font-medium' 
                 : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -283,7 +290,7 @@ const App: React.FC = () => {
 
            <button
             onClick={() => setView('profile')}
-            class={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mb-1 shrink-0 ${
+            className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mb-1 shrink-0 ${
               view === 'profile' 
                 ? 'bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 font-medium' 
                 : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -296,7 +303,7 @@ const App: React.FC = () => {
           {currentUser.role === 'admin' && (
             <button
               onClick={() => setView('admin')}
-              class={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mt-4 shrink-0 ${
+              className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mt-4 shrink-0 ${
                 view === 'admin' 
                   ? 'bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300 font-medium' 
                   : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -308,46 +315,46 @@ const App: React.FC = () => {
           )}
         </nav>
 
-        <div class="p-4 hidden md:block mt-auto space-y-4 min-w-[250px]">
+        <div className="p-4 hidden md:block mt-auto space-y-4 min-w-[250px]">
            {deferredPrompt && (
               <button 
                 onClick={handleInstallClick}
-                class="w-full flex items-center justify-center gap-2 p-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-medium transition-all hover:bg-slate-800 dark:hover:bg-slate-100 mb-2"
+                className="w-full flex items-center justify-center gap-2 p-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-medium transition-all hover:bg-slate-800 dark:hover:bg-slate-100 mb-2"
               >
                 <Download size={18} />
                 <span>Install App</span>
               </button>
            )}
 
-           <div class="grid grid-cols-2 gap-2">
+           <div className="grid grid-cols-2 gap-2">
              <button 
                 onClick={() => setLang(lang === 'en' ? 'ja' : 'en')}
-                class="flex items-center justify-center p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all border border-slate-100 dark:border-slate-800"
+                className="flex items-center justify-center p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all border border-slate-100 dark:border-slate-800"
                 title="Change Language"
               >
                 <Languages size={18} />
               </button>
               <button 
                 onClick={() => setDarkMode(!darkMode)}
-                class="flex items-center justify-center p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all border border-slate-100 dark:border-slate-800"
+                className="flex items-center justify-center p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all border border-slate-100 dark:border-slate-800"
                 title="Toggle Theme"
               >
                 {darkMode ? <Sun size={18} /> : <Moon size={18} />}
               </button>
            </div>
            
-           <div class="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl flex items-center justify-between">
-              <span class="text-sm font-medium text-slate-700 dark:text-slate-300 truncate max-w-[100px]">
+           <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl flex items-center justify-between">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate max-w-[100px]">
                 {currentUser.email?.split('@')[0]}
               </span>
-              <button onClick={handleLogout} class="text-slate-400 hover:text-red-500" title={t.logout}>
+              <button onClick={handleLogout} className="text-slate-400 hover:text-red-500" title={t.logout}>
                 <LogOut size={16} />
               </button>
            </div>
 
            <button
              onClick={() => setIsModalOpen(true)}
-             class="w-full py-3 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-xl shadow-lg shadow-orange-200 dark:shadow-none flex items-center justify-center space-x-2 transition-transform active:scale-95"
+             className="w-full py-3 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-xl shadow-lg shadow-orange-200 dark:shadow-none flex items-center justify-center space-x-2 transition-transform active:scale-95"
            >
              <Plus size={20} />
              <span>{t.new_habit}</span>
@@ -355,12 +362,12 @@ const App: React.FC = () => {
         </div>
       </aside>
 
-      <main class="flex-1 p-4 md:p-8 overflow-y-auto h-screen relative scroll-smooth">
-        <header class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-          <div class="flex items-center gap-4">
+      <main className="flex-1 p-4 md:p-8 overflow-y-auto h-screen relative scroll-smooth">
+        <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <div className="flex items-center gap-4">
             
             <div>
-              <h1 class="text-2xl font-bold text-slate-900 dark:text-white">
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
                 {view === 'dashboard' && t.weekly_focus}
                 {view === 'stats' && t.performance}
                 {view === 'profile' && t.profile}
@@ -368,7 +375,7 @@ const App: React.FC = () => {
                 {view === 'diary' && t.diary}
                 {view === 'tasks' && t.tasks}
               </h1>
-              <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
                 {view === 'dashboard' && t.track_desc}
                 {view === 'stats' && t.analyze_desc}
                 {view === 'profile' && t.manage_desc}
@@ -380,21 +387,21 @@ const App: React.FC = () => {
           </div>
 
           {view === 'dashboard' && (
-            <div class="flex items-center bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-1 self-start md:self-auto transition-colors">
+            <div className="flex items-center bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-1 self-start md:self-auto transition-colors">
               <button 
                 onClick={() => setCurrentDate(prev => addWeeks(prev, -1))}
-                class="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400 transition-colors"
+                className="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400 transition-colors"
               >
                 <ChevronLeft size={20} />
               </button>
-              <div class="px-4 min-w-[140px] text-center">
-                <span class="font-semibold text-slate-700 dark:text-slate-200 text-sm">
+              <div className="px-4 min-w-[140px] text-center">
+                <span className="font-semibold text-slate-700 dark:text-slate-200 text-sm">
                   {weekRangeStr}
                 </span>
               </div>
               <button 
                 onClick={() => setCurrentDate(prev => addWeeks(prev, 1))}
-                class="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400 transition-colors"
+                className="p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400 transition-colors"
               >
                 <ChevronRight size={20} />
               </button>
@@ -402,7 +409,7 @@ const App: React.FC = () => {
           )}
         </header>
 
-        <div class="max-w-5xl mx-auto pb-20 md:pb-0">
+        <div className="max-w-5xl mx-auto pb-20 md:pb-0">
           {view === 'dashboard' && (
              <WeeklyHeatmap 
                habits={habits}
@@ -446,7 +453,7 @@ const App: React.FC = () => {
 
       <button
         onClick={() => setIsModalOpen(true)}
-        class="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-orange-500 text-white rounded-full shadow-xl shadow-orange-300 dark:shadow-none flex items-center justify-center z-50 active:scale-90 transition-transform"
+        className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-orange-500 text-white rounded-full shadow-xl shadow-orange-300 dark:shadow-none flex items-center justify-center z-50 active:scale-90 transition-transform"
       >
         <Plus size={28} />
       </button>

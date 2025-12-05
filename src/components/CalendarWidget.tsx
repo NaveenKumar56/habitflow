@@ -25,36 +25,36 @@ export const CalendarWidget: React.FC<CalendarWidgetProps> = ({
   const emptyDays = Array.from({ length: startDay });
 
   return (
-    <div class="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="font-bold text-slate-800 dark:text-slate-200">
+    <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-bold text-slate-800 dark:text-slate-200">
           {format(currentMonth, 'MMMM yyyy')}
         </h3>
-        <div class="flex gap-1">
+        <div className="flex gap-1">
           <button 
             onClick={() => onMonthChange(addMonths(currentMonth, -1))}
-            class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500"
+            className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500"
           >
             <ChevronLeft size={20} />
           </button>
           <button 
             onClick={() => onMonthChange(addMonths(currentMonth, 1))}
-            class="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500"
+            className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500"
           >
             <ChevronRight size={20} />
           </button>
         </div>
       </div>
 
-      <div class="grid grid-cols-7 mb-2">
+      <div className="grid grid-cols-7 mb-2">
         {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => (
-          <div key={i} class="text-center text-xs font-medium text-slate-400">
+          <div key={i} className="text-center text-xs font-medium text-slate-400">
             {d}
           </div>
         ))}
       </div>
 
-      <div class="grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7 gap-1">
         {emptyDays.map((_, i) => <div key={`empty-${i}`} />)}
         
         {days.map(day => {
@@ -67,7 +67,7 @@ export const CalendarWidget: React.FC<CalendarWidgetProps> = ({
             <button
               key={dateStr}
               onClick={() => onSelectDate(day)}
-              class={`
+              className={`
                 h-9 w-9 rounded-full flex items-center justify-center text-sm relative transition-all
                 ${isSelected 
                   ? 'bg-orange-500 text-white shadow-md' 
@@ -77,7 +77,7 @@ export const CalendarWidget: React.FC<CalendarWidgetProps> = ({
             >
               {format(day, 'd')}
               {hasContent && !isSelected && (
-                <div class="absolute bottom-1 w-1 h-1 bg-orange-500 rounded-full" />
+                <div className="absolute bottom-1 w-1 h-1 bg-orange-500 rounded-full" />
               )}
             </button>
           );
