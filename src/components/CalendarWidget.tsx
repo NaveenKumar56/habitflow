@@ -1,5 +1,5 @@
 import React from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isSameDay, isSameMonth } from 'date-fns';
+import { format, endOfMonth, eachDayOfInterval, getDay, addMonths, isSameDay } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface CalendarWidgetProps {
@@ -17,7 +17,8 @@ export const CalendarWidget: React.FC<CalendarWidgetProps> = ({
   onSelectDate, 
   markers 
 }) => {
-  const monthStart = startOfMonth(currentMonth);
+  // Fix: Manual start of month calculation to avoid import error
+  const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
   const monthEnd = endOfMonth(currentMonth);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
   
@@ -34,7 +35,7 @@ export const CalendarWidget: React.FC<CalendarWidgetProps> = ({
         </h3>
         <div className="flex gap-1">
           <button 
-            onClick={() => onMonthChange(subMonths(currentMonth, 1))}
+            onClick={() => onMonthChange(addMonths(currentMonth, -1))}
             className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500"
           >
             <ChevronLeft size={20} />

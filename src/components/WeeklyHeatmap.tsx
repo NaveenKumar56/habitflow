@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { format, addDays, subDays, isSameDay } from 'date-fns';
+import { format, addDays, isSameDay } from 'date-fns';
 import { Habit, HabitCategory, Language } from '../types';
 import { CATEGORY_COLORS, TRANSLATIONS } from '../constants';
 import { Check, Trash2, Flame } from 'lucide-react';
@@ -32,7 +31,8 @@ export const WeeklyHeatmap: React.FC<WeeklyHeatmapProps> = ({ habits, currentDat
     
     // Check back up to 365 days
     for (let i = 0; i < 365; i++) {
-      const d = subDays(checkDate, i);
+      // Fix: Use addDays with negative value instead of subDays to avoid import error
+      const d = addDays(checkDate, -i);
       const dStr = format(d, 'yyyy-MM-dd');
       
       if (habit.logs[dStr]) {
