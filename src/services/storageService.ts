@@ -1,6 +1,6 @@
 
 import { supabase } from '../lib/supabase';
-import { Habit } from '../types';
+import { Habit, DiaryEntry } from '../types';
 
 // --- Cloud Data Management (Supabase) ---
 
@@ -16,9 +16,6 @@ export const loadHabits = async (): Promise<Habit[]> => {
       return [];
     }
 
-    // Map database snake_case to app camelCase if needed, 
-    // but we structured the table to match mostly.
-    // Ensure 'logs' is an object, Supabase returns JSONB as object automatically.
     return (data as any[]).map(h => ({
       id: h.id,
       title: h.title,
@@ -63,7 +60,6 @@ export const deleteHabitFromCloud = async (id: string) => {
 };
 
 export const syncAllHabits = async (habits: Habit[]) => {
-  // For mass updates or imports
   const user = (await supabase.auth.getUser()).data.user;
   if (!user) return;
 
@@ -84,7 +80,51 @@ export const syncAllHabits = async (habits: Habit[]) => {
 export const clearAllCloudData = async () => {
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) return;
-
-    // Delete all habits for this user
     await supabase.from('habits').delete().eq('user_id', user.id);
+    await supabase.from('diary_entries').delete().eq('user_id', user.id);
 };
+
+// --- Diary Management ---
+
+export const loadDiaryEntries = async (): Promise<DiaryEntry[]> => {
+    try {
+        const { data, error } = await supabase
+            .from('diary_entries')
+            .select('*')
+            .order('date', { ascending: false });
+
+        if (error) {
+            console.error("Error loading diary:", error);
+            return [];
+        }
+
+        return (data as any[]).map(d => ({
+            id: d.id,
+            date: d.date,
+            content: d.content,
+            mood: d.mood,
+            createdAt: d.created_at
+        }));
+    } catch (error) {
+        console.error("Failed load diary", error);
+        return [];
+    }
+}
+
+export const saveDiaryEntry = async (entry: DiaryEntry) => {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return;
+
+    const { error } = await supabase
+        .from('diary_entries')
+        .upsert({
+            id: entry.id,
+            user_id: user.id,
+            date: entry.date,
+            content: entry.content,
+            mood: entry.mood,
+            created_at: entry.createdAt
+        });
+
+    if (error) console.error("Error saving diary:", error);
+}

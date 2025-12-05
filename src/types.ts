@@ -23,4 +23,12 @@ export interface User {
   role?: 'admin' | 'user';
 }
 
+export interface DiaryEntry {
+  id: string;
+  date: string; // YYYY-MM-DD
+  content: string;
+  mood: 'happy' | 'neutral' | 'sad' | 'stress' | 'excited';
+  createdAt: string;
+}
+
 export type Language = 'en' | 'ja';

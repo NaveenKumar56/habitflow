@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, LayoutDashboard, BarChart2, User as UserIcon, ChevronLeft, ChevronRight, Moon, Sun, Languages, LogOut, Shield } from 'lucide-react';
+import { Plus, LayoutDashboard, BarChart2, User as UserIcon, ChevronLeft, ChevronRight, Moon, Sun, Languages, LogOut, Shield, Menu, PanelLeftClose, Book } from 'lucide-react';
 import { format, addWeeks, addDays } from 'date-fns';
 import { Habit, HabitCategory, User, Language } from './types';
 import { loadHabits, saveHabitToCloud, deleteHabitFromCloud, syncAllHabits, clearAllCloudData } from './services/storageService';
@@ -12,6 +12,7 @@ import { WeeklyHeatmap } from './components/WeeklyHeatmap';
 import { ProfileView } from './components/ProfileView';
 import { AuthView } from './components/AuthView';
 import { AdminView } from './components/AdminView';
+import { DiaryView } from './components/DiaryView';
 
 const generateId = () => crypto.randomUUID();
 
@@ -35,8 +36,9 @@ const App: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   
   // UI State
-  const [view, setView] = useState<'dashboard' | 'stats' | 'profile' | 'admin'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'stats' | 'profile' | 'admin' | 'diary'>('dashboard');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   
   // Settings State
   const [lang, setLang] = useState<Language>('en');
@@ -183,17 +185,41 @@ const App: React.FC = () => {
   const weekRangeStr = `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col md:flex-row font-sans text-slate-900 dark:text-slate-100 transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col md:flex-row font-sans text-slate-900 dark:text-slate-100 transition-colors duration-200 relative">
       
+      {/* Menu Button (Always visible when sidebar is closed) */}
+      {!isSidebarVisible && (
+        <button 
+          onClick={() => setIsSidebarVisible(true)}
+          className="fixed top-4 left-4 z-50 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all active:scale-95"
+          title="Open Menu"
+        >
+          <Menu size={24} className="text-slate-700 dark:text-slate-300" />
+        </button>
+      )}
+
       {/* Sidebar */}
-      <aside className="w-full md:w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 md:h-screen flex md:flex-col sticky top-0 z-30 transition-colors duration-200">
+      <aside className={`
+        bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 
+        md:h-screen flex md:flex-col sticky top-0 z-40 transition-all duration-300 ease-in-out overflow-hidden
+        ${isSidebarVisible ? 'w-full md:w-64 opacity-100' : 'w-0 opacity-0 p-0 border-none'}
+      `}>
         <div className="p-6 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center shadow-lg shadow-orange-200 dark:shadow-none">
+            <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center shadow-lg shadow-orange-200 dark:shadow-none shrink-0">
                <div className="w-3 h-3 bg-white/40 rounded-full" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">{t.app_name}</span>
+            <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white whitespace-nowrap animate-in fade-in duration-200">{t.app_name}</span>
           </div>
+
+          {/* Close Button (Desktop) */}
+          <button 
+            onClick={() => setIsSidebarVisible(false)}
+            className="hidden md:block p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+          >
+            <PanelLeftClose size={20} />
+          </button>
+
           {/* Mobile Theme Toggle */}
           <button 
             onClick={() => setDarkMode(!darkMode)}
@@ -203,10 +229,10 @@ const App: React.FC = () => {
           </button>
         </div>
 
-        <nav className="flex-1 px-4 pb-4 flex md:block overflow-x-auto md:overflow-visible gap-2">
+        <nav className="flex-1 px-4 pb-4 flex md:flex-col overflow-x-auto md:overflow-visible gap-2 md:gap-1 min-w-[250px]">
           <button
             onClick={() => setView('dashboard')}
-            className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mb-1 ${
+            className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mb-1 shrink-0 ${
               view === 'dashboard' 
                 ? 'bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 font-medium' 
                 : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -217,8 +243,20 @@ const App: React.FC = () => {
           </button>
           
           <button
+            onClick={() => setView('diary')}
+            className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mb-1 shrink-0 ${
+              view === 'diary' 
+                ? 'bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 font-medium' 
+                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+            }`}
+          >
+            <Book size={20} />
+            <span>{t.diary}</span>
+          </button>
+
+          <button
             onClick={() => setView('stats')}
-            className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mb-1 ${
+            className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mb-1 shrink-0 ${
               view === 'stats' 
                 ? 'bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 font-medium' 
                 : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -230,7 +268,7 @@ const App: React.FC = () => {
 
            <button
             onClick={() => setView('profile')}
-            className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mb-1 ${
+            className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mb-1 shrink-0 ${
               view === 'profile' 
                 ? 'bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 font-medium' 
                 : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -243,7 +281,7 @@ const App: React.FC = () => {
           {currentUser.role === 'admin' && (
             <button
               onClick={() => setView('admin')}
-              className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mt-4 ${
+              className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mt-4 shrink-0 ${
                 view === 'admin' 
                   ? 'bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300 font-medium' 
                   : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -255,7 +293,7 @@ const App: React.FC = () => {
           )}
         </nav>
 
-        <div className="p-4 hidden md:block mt-auto space-y-4">
+        <div className="p-4 hidden md:block mt-auto space-y-4 min-w-[250px]">
            {/* Controls */}
            <div className="grid grid-cols-2 gap-2">
              <button 
@@ -278,7 +316,7 @@ const App: React.FC = () => {
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate max-w-[100px]">
                 {currentUser.email?.split('@')[0]}
               </span>
-              <button onClick={handleLogout} className="text-slate-400 hover:text-red-500">
+              <button onClick={handleLogout} className="text-slate-400 hover:text-red-500" title={t.logout}>
                 <LogOut size={16} />
               </button>
            </div>
@@ -296,19 +334,24 @@ const App: React.FC = () => {
       {/* Main Content */}
       <main className="flex-1 p-4 md:p-8 overflow-y-auto h-screen relative scroll-smooth">
         <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-              {view === 'dashboard' && t.weekly_focus}
-              {view === 'stats' && t.performance}
-              {view === 'profile' && t.profile}
-              {view === 'admin' && t.admin}
-            </h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-              {view === 'dashboard' && t.track_desc}
-              {view === 'stats' && t.analyze_desc}
-              {view === 'profile' && t.manage_desc}
-              {view === 'admin' && t.admin_desc}
-            </p>
+          <div className="flex items-center gap-4">
+            
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                {view === 'dashboard' && t.weekly_focus}
+                {view === 'stats' && t.performance}
+                {view === 'profile' && t.profile}
+                {view === 'admin' && t.admin}
+                {view === 'diary' && t.diary}
+              </h1>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                {view === 'dashboard' && t.track_desc}
+                {view === 'stats' && t.analyze_desc}
+                {view === 'profile' && t.manage_desc}
+                {view === 'admin' && t.admin_desc}
+                {view === 'diary' && t.diary_desc}
+              </p>
+            </div>
           </div>
 
           {view === 'dashboard' && (
@@ -356,6 +399,10 @@ const App: React.FC = () => {
               onClearData={handleClearData}
               lang={lang}
             />
+          )}
+
+           {view === 'diary' && (
+            <DiaryView lang={lang} />
           )}
 
           {view === 'admin' && currentUser.role === 'admin' && (

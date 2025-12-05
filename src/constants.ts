@@ -45,12 +45,14 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     performance: 'Performance',
     profile: 'Profile',
     stats: 'Statistics',
+    diary: 'Diary',
     settings: 'Settings',
     admin: 'Admin',
     new_habit: 'New Habit',
     track_desc: 'Track your consistency day by day.',
     analyze_desc: 'Analyze your long-term progress.',
     manage_desc: 'Manage your account and data.',
+    diary_desc: 'Record your daily thoughts and mood.',
     admin_desc: 'Manage users and system settings.',
     habit_title: 'Habit Title',
     category: 'Category',
@@ -95,7 +97,11 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     total_users: 'Total Users',
     actions: 'Actions',
     delete_user: 'Delete User',
-    delete_user_confirm: 'Are you sure you want to delete this user and ALL their data? This cannot be undone.'
+    delete_user_confirm: 'Are you sure you want to delete this user and ALL their data? This cannot be undone.',
+    save_entry: 'Save Entry',
+    todays_mood: "Today's Mood",
+    write_diary: 'Write about your day...',
+    no_entries: 'No diary entries yet.'
   },
   ja: {
     app_name: '夕日トラッカー',
@@ -103,12 +109,14 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     performance: 'パフォーマンス',
     profile: 'プロフィール',
     stats: '統計',
+    diary: '日記',
     settings: '設定',
     admin: '管理',
     new_habit: '新しい習慣',
     track_desc: '日々の継続を記録しましょう。',
     analyze_desc: '長期的な進捗を分析します。',
     manage_desc: 'アカウントとデータを管理します。',
+    diary_desc: '日々の思考と気分を記録します。',
     admin_desc: 'ユーザーとシステム設定を管理します。',
     habit_title: '習慣のタイトル',
     category: 'カテゴリー',
@@ -153,6 +161,10 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     total_users: '総ユーザー数',
     actions: '操作',
     delete_user: 'ユーザーを削除',
-    delete_user_confirm: 'このユーザーとすべてのデータを削除してもよろしいですか？この操作は取り消せません。'
+    delete_user_confirm: 'このユーザーとすべてのデータを削除してもよろしいですか？この操作は取り消せません。',
+    save_entry: '保存',
+    todays_mood: '今日の気分',
+    write_diary: '今日の日記を書く...',
+    no_entries: '日記のエントリーはまだありません。'
   }
 };
