@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import { HabitCategory } from '../types';
-import { CATEGORIES } from '../constants';
+import { HabitCategory, Language } from '../types';
+import { CATEGORIES, TRANSLATIONS } from '../constants';
 
 interface AddHabitModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAdd: (title: string, category: HabitCategory) => void;
+  lang: Language;
 }
 
-export const AddHabitModal: React.FC<AddHabitModalProps> = ({ isOpen, onClose, onAdd }) => {
+export const AddHabitModal: React.FC<AddHabitModalProps> = ({ isOpen, onClose, onAdd, lang }) => {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<HabitCategory>('Health');
+  const t = TRANSLATIONS[lang];
 
   if (!isOpen) return null;
 
@@ -33,7 +35,7 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({ isOpen, onClose, o
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-200 border border-slate-200 dark:border-slate-800">
         <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
-          <h2 className="text-lg font-bold text-slate-800 dark:text-white">New Habit</h2>
+          <h2 className="text-lg font-bold text-slate-800 dark:text-white">{t.new_habit}</h2>
           <button onClick={resetAndClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
             <X size={20} />
           </button>
@@ -42,19 +44,19 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({ isOpen, onClose, o
         <div className="p-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Habit Title</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.habit_title}</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g., Meditate for 10 mins"
+                placeholder={t.habit_placeholder}
                 className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                 autoFocus
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Category</label>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.category}</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as HabitCategory)}
@@ -71,7 +73,7 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({ isOpen, onClose, o
               disabled={!title.trim()}
               className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-medium shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4"
             >
-              Create Habit
+              {t.create}
             </button>
           </form>
         </div>

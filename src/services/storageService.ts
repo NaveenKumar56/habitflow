@@ -1,111 +1,90 @@
 
-import { Habit, User } from '../types';
-import { DEFAULT_HABITS } from '../constants';
+import { supabase } from '../lib/supabase';
+import { Habit } from '../types';
 
-const USERS_KEY = 'yuuhi_users';
-const SESSION_KEY = 'yuuhi_session';
-const DATA_PREFIX = 'yuuhi_data_';
+// --- Cloud Data Management (Supabase) ---
 
-// --- User Management ---
-
-export const getUsers = (): User[] => {
+export const loadHabits = async (): Promise<Habit[]> => {
   try {
-    const stored = localStorage.getItem(USERS_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch (e) { return []; }
-};
+    const { data, error } = await supabase
+      .from('habits')
+      .select('*')
+      .order('created_at', { ascending: true });
 
-export const addUser = (user: User): boolean => {
-  const users = getUsers();
-  // Case-insensitive check for existing user
-  if (users.find(u => u.username.toLowerCase() === user.username.toLowerCase())) {
-    return false; // User exists
-  }
-  
-  // Assign role
-  // If username is 'admin', assign admin role
-  if (user.username.toLowerCase() === 'admin') {
-    user.role = 'admin';
-  } else {
-    user.role = 'user';
-  }
-
-  users.push(user);
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-  // Initialize default habits for new user
-  saveHabits(user.username, DEFAULT_HABITS as Habit[]);
-  return true;
-};
-
-export const verifyUser = (username: string, password: string): User | null => {
-  const users = getUsers();
-  const user = users.find(u => 
-    u.username.toLowerCase() === username.toLowerCase() && u.password === password
-  );
-  return user || null;
-};
-
-export const deleteUserAccount = (targetUsername: string) => {
-  let users = getUsers();
-  users = users.filter(u => u.username.toLowerCase() !== targetUsername.toLowerCase());
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-  localStorage.removeItem(`${DATA_PREFIX}${targetUsername}`);
-  
-  // If the deleted user was the session user, this will be caught by app refresh
-};
-
-// --- Session Management ---
-
-export const setSession = (username: string, remember: boolean) => {
-  if (remember) {
-    localStorage.setItem(SESSION_KEY, username);
-  } else {
-    sessionStorage.setItem(SESSION_KEY, username);
-    localStorage.removeItem(SESSION_KEY);
-  }
-};
-
-export const getSessionUser = (): User | null => {
-  let username = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
-  if (!username) return null;
-  
-  const users = getUsers();
-  const user = users.find(u => u.username.toLowerCase() === username.toLowerCase());
-  
-  // If user found in session but not in DB (e.g. deleted), clear session
-  if (!user) {
-    clearSession();
-    return null;
-  }
-  return user;
-};
-
-export const clearSession = () => {
-  localStorage.removeItem(SESSION_KEY);
-  sessionStorage.removeItem(SESSION_KEY);
-};
-
-// --- Data Management ---
-
-export const loadHabits = (username: string): Habit[] => {
-  try {
-    const key = `${DATA_PREFIX}${username}`;
-    const stored = localStorage.getItem(key);
-    if (!stored) {
+    if (error) {
+      console.error("Error loading habits:", error);
       return [];
     }
-    return JSON.parse(stored);
+
+    // Map database snake_case to app camelCase if needed, 
+    // but we structured the table to match mostly.
+    // Ensure 'logs' is an object, Supabase returns JSONB as object automatically.
+    return (data as any[]).map(h => ({
+      id: h.id,
+      title: h.title,
+      category: h.category,
+      color: h.color || 'indigo',
+      createdAt: h.created_at,
+      logs: h.logs || {}
+    }));
+
   } catch (error) {
     console.error("Failed to load habits", error);
     return [];
   }
 };
 
-export const saveHabits = (username: string, habits: Habit[]): void => {
-  try {
-    const key = `${DATA_PREFIX}${username}`;
-    localStorage.setItem(key, JSON.stringify(habits));
-  } catch (error) {
-    console.error("Failed to save habits", error);
-  }
+export const saveHabitToCloud = async (habit: Habit) => {
+  const user = (await supabase.auth.getUser()).data.user;
+  if (!user) return;
+
+  const { error } = await supabase
+    .from('habits')
+    .upsert({
+      id: habit.id,
+      user_id: user.id,
+      title: habit.title,
+      category: habit.category,
+      color: habit.color,
+      created_at: habit.createdAt,
+      logs: habit.logs
+    });
+
+  if (error) console.error("Error saving habit:", error);
+};
+
+export const deleteHabitFromCloud = async (id: string) => {
+  const { error } = await supabase
+    .from('habits')
+    .delete()
+    .eq('id', id);
+  
+  if (error) console.error("Error deleting habit:", error);
+};
+
+export const syncAllHabits = async (habits: Habit[]) => {
+  // For mass updates or imports
+  const user = (await supabase.auth.getUser()).data.user;
+  if (!user) return;
+
+  const records = habits.map(h => ({
+    id: h.id,
+    user_id: user.id,
+    title: h.title,
+    category: h.category,
+    color: h.color,
+    created_at: h.createdAt,
+    logs: h.logs
+  }));
+
+  const { error } = await supabase.from('habits').upsert(records);
+  if (error) console.error("Error syncing habits:", error);
+};
+
+export const clearAllCloudData = async () => {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return;
+
+    // Delete all habits for this user
+    await supabase.from('habits').delete().eq('user_id', user.id);
 };

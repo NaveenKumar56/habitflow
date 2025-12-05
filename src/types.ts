@@ -23,10 +23,10 @@ export interface DayStat {
 }
 
 export interface User {
-  username: string;
-  password: string; 
-  displayName: string;
-  role?: 'admin' | 'user'; 
+  id: string;
+  email: string;
+  username?: string; // Metadata
+  role?: 'admin' | 'user';
 }
 
 export type Language = 'en' | 'ja';

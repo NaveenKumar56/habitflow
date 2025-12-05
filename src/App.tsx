@@ -1,18 +1,18 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, LayoutDashboard, BarChart2, User as UserIcon, ChevronLeft, ChevronRight, Moon, Sun, Languages, LogOut, Shield } from 'lucide-react';
+import { Plus, LayoutDashboard, BarChart2, User as UserIcon, ChevronLeft, ChevronRight, Moon, Sun, Languages, LogOut } from 'lucide-react';
 import { format, addWeeks, addDays } from 'date-fns';
 import { Habit, HabitCategory, User, Language } from './types';
-import { loadHabits, saveHabits as saveLocal, getSessionUser, clearSession, getUsers, deleteUserAccount } from './services/storageService';
+import { loadHabits, saveHabitToCloud, deleteHabitFromCloud, syncAllHabits, clearAllCloudData } from './services/storageService';
+import { supabase } from './lib/supabase';
 import { TRANSLATIONS } from './constants';
 import { AddHabitModal } from './components/AddHabitModal';
 import { ChartsView } from './components/ChartsView';
 import { WeeklyHeatmap } from './components/WeeklyHeatmap';
 import { ProfileView } from './components/ProfileView';
 import { AuthView } from './components/AuthView';
-import { AdminView } from './components/AdminView';
 
-const generateId = () => Math.random().toString(36).substr(2, 9);
+const generateId = () => crypto.randomUUID();
 
 const getStartOfWeek = (date: Date) => {
   const day = date.getDay();
@@ -27,13 +27,11 @@ const getEndOfWeek = (date: Date) => {
 const App: React.FC = () => {
   // Auth State
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   
   // Data State
   const [habits, setHabits] = useState<Habit[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
-  
-  // Admin State
-  const [allUsers, setAllUsers] = useState<User[]>([]);
   
   // UI State
   const [view, setView] = useState<'dashboard' | 'stats' | 'profile' | 'admin'>('dashboard');
@@ -62,60 +60,69 @@ const App: React.FC = () => {
     }
   }, [darkMode]);
 
-  // Check Session on Mount
+  // Auth Listener (Supabase)
   useEffect(() => {
-    const sessionUser = getSessionUser();
-    if (sessionUser) {
-      setCurrentUser(sessionUser);
-    }
+    // Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setCurrentUser({ 
+            id: session.user.id, 
+            email: session.user.email || '',
+            role: 'user' // Default role for now
+        });
+      }
+      setLoading(false);
+    });
+
+    // Listen for changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        setCurrentUser({ 
+            id: session.user.id, 
+            email: session.user.email || '',
+            role: 'user' 
+        });
+      } else {
+        setCurrentUser(null);
+        setHabits([]);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   // Load Data when User Changes
   useEffect(() => {
     if (currentUser) {
-      const userHabits = loadHabits(currentUser.username);
-      setHabits(userHabits);
-      
-      if (currentUser.role === 'admin') {
-        setAllUsers(getUsers());
-      }
-    } else {
-      setHabits([]);
-      setAllUsers([]);
+      loadHabits().then(data => setHabits(data));
     }
   }, [currentUser]);
 
-  const handleLogin = (user: User) => {
-    setCurrentUser(user);
-    setView('dashboard');
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
   };
 
-  const handleLogout = () => {
-    clearSession();
-    setCurrentUser(null);
-    setView('dashboard');
-  };
-
-  // Data Operations
-  const saveAll = (newHabits: Habit[]) => {
-    setHabits(newHabits);
-    if (currentUser) {
-      saveLocal(currentUser.username, newHabits);
-    }
-  };
-
-  const toggleHabit = (id: string, dateStr: string) => {
-    const newHabits = habits.map(habit => {
+  const toggleHabit = async (id: string, dateStr: string) => {
+    const updatedHabits = habits.map(habit => {
       if (habit.id !== id) return habit;
       const newLogs = { ...habit.logs };
       if (newLogs[dateStr]) delete newLogs[dateStr];
       else newLogs[dateStr] = true;
       return { ...habit, logs: newLogs };
     });
-    saveAll(newHabits);
+    
+    setHabits(updatedHabits); // Optimistic UI update
+    
+    const changedHabit = updatedHabits.find(h => h.id === id);
+    if (changedHabit) {
+        await saveHabitToCloud(changedHabit);
+    }
   };
 
-  const addHabit = (title: string, category: HabitCategory) => {
+  const addHabit = async (title: string, category: HabitCategory) => {
     const newHabit: Habit = {
       id: generateId(),
       title,
@@ -124,39 +131,39 @@ const App: React.FC = () => {
       createdAt: new Date().toISOString(),
       logs: {}
     };
-    saveAll([...habits, newHabit]);
+    
+    setHabits(prev => [...prev, newHabit]);
+    await saveHabitToCloud(newHabit);
   };
 
-  const deleteHabit = (id: string) => {
+  const deleteHabit = async (id: string) => {
     if (window.confirm(t.delete_confirm)) {
-      saveAll(habits.filter(h => h.id !== id));
+      setHabits(prev => prev.filter(h => h.id !== id));
+      await deleteHabitFromCloud(id);
     }
   };
 
-  const handleImportData = (importedHabits: Habit[]) => {
-    saveAll(importedHabits);
-    alert('Data imported successfully!');
+  const handleImportData = async (importedHabits: Habit[]) => {
+    setHabits(importedHabits);
+    await syncAllHabits(importedHabits);
+    alert('Data imported and synced to cloud!');
   };
 
-  const handleClearData = () => {
+  const handleClearData = async () => {
     if (window.confirm(t.delete_confirm)) {
-      saveAll([]);
-    }
-  };
-
-  // Admin Operations
-  const handleDeleteUser = (username: string) => {
-    if (window.confirm(t.delete_user_confirm)) {
-      deleteUserAccount(username);
-      setAllUsers(getUsers());
+      setHabits([]);
+      await clearAllCloudData();
     }
   };
 
   // --- Auth Guard ---
+  if (loading) {
+      return <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center dark:text-white">Loading...</div>;
+  }
+
   if (!currentUser) {
     return (
       <AuthView 
-        onLogin={handleLogin} 
         lang={lang} 
         setLang={setLang} 
         darkMode={darkMode}
@@ -227,20 +234,6 @@ const App: React.FC = () => {
             <UserIcon size={20} />
             <span>{t.profile}</span>
           </button>
-
-          {currentUser.role === 'admin' && (
-            <button
-              onClick={() => setView('admin')}
-              className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mt-4 ${
-                view === 'admin' 
-                  ? 'bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300 font-medium' 
-                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-              }`}
-            >
-              <Shield size={20} />
-              <span>{t.admin}</span>
-            </button>
-          )}
         </nav>
 
         <div className="p-4 hidden md:block mt-auto space-y-4">
@@ -264,7 +257,7 @@ const App: React.FC = () => {
            
            <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl flex items-center justify-between">
               <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate max-w-[100px]">
-                {currentUser.displayName}
+                {currentUser.email?.split('@')[0]}
               </span>
               <button onClick={handleLogout} className="text-slate-400 hover:text-red-500">
                 <LogOut size={16} />
@@ -289,13 +282,11 @@ const App: React.FC = () => {
               {view === 'dashboard' && t.weekly_focus}
               {view === 'stats' && t.performance}
               {view === 'profile' && t.profile}
-              {view === 'admin' && t.admin}
             </h1>
             <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
               {view === 'dashboard' && t.track_desc}
               {view === 'stats' && t.analyze_desc}
               {view === 'profile' && t.manage_desc}
-              {view === 'admin' && t.admin_desc}
             </p>
           </div>
 
@@ -342,14 +333,6 @@ const App: React.FC = () => {
               habits={habits}
               onImport={handleImportData}
               onClearData={handleClearData}
-              lang={lang}
-            />
-          )}
-
-          {view === 'admin' && currentUser.role === 'admin' && (
-            <AdminView 
-              users={allUsers}
-              onDeleteUser={handleDeleteUser}
               lang={lang}
             />
           )}
