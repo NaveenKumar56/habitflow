@@ -1,3 +1,4 @@
+
 export interface Habit {
   id: string;
   title: string;
@@ -21,13 +22,11 @@ export interface DayStat {
   totalHabits: number;
 }
 
-export interface UserProfile {
-  name: string;
-  email: string;
-  picture: string;
+export interface User {
+  username: string;
+  password: string; 
+  displayName: string;
+  role?: 'admin' | 'user'; 
 }
 
-export interface DriveConfig {
-  clientId: string;
-  apiKey: string;
-}
+export type Language = 'en' | 'ja';

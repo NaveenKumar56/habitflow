@@ -1,17 +1,19 @@
+
 import React, { useState, useEffect } from 'react';
-import { Plus, LayoutDashboard, BarChart2, User, ChevronLeft, ChevronRight, Loader2, Moon, Sun } from 'lucide-react';
+import { Plus, LayoutDashboard, BarChart2, User as UserIcon, ChevronLeft, ChevronRight, Moon, Sun, Languages, LogOut, Shield } from 'lucide-react';
 import { format, addWeeks, addDays } from 'date-fns';
-import { Habit, HabitCategory, UserProfile, DriveConfig } from './types';
-import { loadHabits, saveHabits as saveLocal } from './services/storageService';
+import { Habit, HabitCategory, User, Language } from './types';
+import { loadHabits, saveHabits as saveLocal, getSessionUser, clearSession, getUsers, deleteUserAccount } from './services/storageService';
+import { TRANSLATIONS } from './constants';
 import { AddHabitModal } from './components/AddHabitModal';
 import { ChartsView } from './components/ChartsView';
 import { WeeklyHeatmap } from './components/WeeklyHeatmap';
 import { ProfileView } from './components/ProfileView';
-import * as driveService from './services/driveService';
+import { AuthView } from './components/AuthView';
+import { AdminView } from './components/AdminView';
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
-// Helper functions to replace missing date-fns exports
 const getStartOfWeek = (date: Date) => {
   const day = date.getDay();
   const diff = (day === 0 ? -6 : 1) - day;
@@ -23,17 +25,22 @@ const getEndOfWeek = (date: Date) => {
 };
 
 const App: React.FC = () => {
+  // Auth State
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  
   // Data State
   const [habits, setHabits] = useState<Habit[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
   
-  // UI State
-  const [view, setView] = useState<'dashboard' | 'stats' | 'profile'>('dashboard');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'error'>('idle');
+  // Admin State
+  const [allUsers, setAllUsers] = useState<User[]>([]);
   
-  // Theme State
+  // UI State
+  const [view, setView] = useState<'dashboard' | 'stats' | 'profile' | 'admin'>('dashboard');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Settings State
+  const [lang, setLang] = useState<Language>('en');
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('theme') === 'dark' || 
@@ -42,14 +49,7 @@ const App: React.FC = () => {
     return false;
   });
 
-  // Auth & Config State
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [driveConfig, setDriveConfig] = useState<DriveConfig>(() => {
-    const saved = localStorage.getItem('habitflow_drive_config');
-    return saved ? JSON.parse(saved) : { clientId: '', apiKey: '' };
-  });
-  const [tokenClient, setTokenClient] = useState<any>(null);
-  const [isDriveConnected, setIsDriveConnected] = useState(false);
+  const t = TRANSLATIONS[lang];
 
   // Apply Theme
   useEffect(() => {
@@ -62,103 +62,45 @@ const App: React.FC = () => {
     }
   }, [darkMode]);
 
-  // 1. Initial Load (Local)
+  // Check Session on Mount
   useEffect(() => {
-    const loaded = loadHabits();
-    setHabits(loaded);
-    setIsLoading(false);
+    const sessionUser = getSessionUser();
+    if (sessionUser) {
+      setCurrentUser(sessionUser);
+    }
   }, []);
 
-  // 2. Initialize Google Drive Clients if Config exists
+  // Load Data when User Changes
   useEffect(() => {
-    if (driveConfig.clientId && !isDriveConnected) {
-      const initializeGoogle = async () => {
-        try {
-          // Init GAPI for file operations
-          await driveService.initGapiClient(driveConfig.apiKey, driveConfig.clientId);
-          
-          // Init Token Client for Auth
-          const client = driveService.initTokenClient(driveConfig.clientId, async (response) => {
-            if (response.access_token) {
-              setIsDriveConnected(true);
-              // Simplistic user info
-              setUser({ name: 'Google User', email: 'Connected', picture: '' }); 
-              await syncWithDrive();
-            }
-          });
-          setTokenClient(client);
-        } catch (error) {
-          console.error("Failed to init Google Drive:", error);
-        }
-      };
-      initializeGoogle();
-    }
-  }, [driveConfig]);
-
-  // 3. Sync Logic
-  const syncWithDrive = async () => {
-    if (!isDriveConnected) return;
-    setSyncStatus('syncing');
-    try {
-      const fileId = await driveService.findDataFile();
-      if (fileId) {
-        const cloudHabits = await driveService.loadDataFromFile(fileId);
-        setHabits(cloudHabits);
-        saveLocal(cloudHabits);
-      } else {
-        await driveService.createDataFile(habits);
+    if (currentUser) {
+      const userHabits = loadHabits(currentUser.username);
+      setHabits(userHabits);
+      
+      if (currentUser.role === 'admin') {
+        setAllUsers(getUsers());
       }
-      setSyncStatus('idle');
-    } catch (error) {
-      console.error("Sync failed", error);
-      setSyncStatus('error');
-    }
-  };
-
-  const handleSignIn = () => {
-    if (tokenClient) {
-      tokenClient.requestAccessToken({ prompt: 'consent' });
     } else {
-      alert("Please configure Client ID in Profile first.");
-      setView('profile');
+      setHabits([]);
+      setAllUsers([]);
     }
+  }, [currentUser]);
+
+  const handleLogin = (user: User) => {
+    setCurrentUser(user);
+    setView('dashboard');
   };
 
-  const handleSignOut = () => {
-    const token = window.gapi?.client?.getToken();
-    if (token) {
-      window.google?.accounts?.oauth2?.revoke(token.access_token, () => {
-        console.log('Revoked');
-      });
-      window.gapi.client.setToken('');
-    }
-    setUser(null);
-    setIsDriveConnected(false);
+  const handleLogout = () => {
+    clearSession();
+    setCurrentUser(null);
+    setView('dashboard');
   };
 
-  const saveDriveConfig = (config: DriveConfig) => {
-    setDriveConfig(config);
-    localStorage.setItem('habitflow_drive_config', JSON.stringify(config));
-  };
-
-  // 4. Data Operations
-  const saveAll = async (newHabits: Habit[]) => {
+  // Data Operations
+  const saveAll = (newHabits: Habit[]) => {
     setHabits(newHabits);
-    saveLocal(newHabits);
-    
-    if (isDriveConnected) {
-      setSyncStatus('syncing');
-      try {
-        const fileId = await driveService.findDataFile();
-        if (fileId) {
-          await driveService.updateDataFile(fileId, newHabits);
-        } else {
-          await driveService.createDataFile(newHabits);
-        }
-        setSyncStatus('idle');
-      } catch (err) {
-        setSyncStatus('error');
-      }
+    if (currentUser) {
+      saveLocal(currentUser.username, newHabits);
     }
   };
 
@@ -186,12 +128,44 @@ const App: React.FC = () => {
   };
 
   const deleteHabit = (id: string) => {
-    if (window.confirm("Are you sure?")) {
+    if (window.confirm(t.delete_confirm)) {
       saveAll(habits.filter(h => h.id !== id));
     }
   };
 
-  // 5. Render
+  const handleImportData = (importedHabits: Habit[]) => {
+    saveAll(importedHabits);
+    alert('Data imported successfully!');
+  };
+
+  const handleClearData = () => {
+    if (window.confirm(t.delete_confirm)) {
+      saveAll([]);
+    }
+  };
+
+  // Admin Operations
+  const handleDeleteUser = (username: string) => {
+    if (window.confirm(t.delete_user_confirm)) {
+      deleteUserAccount(username);
+      setAllUsers(getUsers());
+    }
+  };
+
+  // --- Auth Guard ---
+  if (!currentUser) {
+    return (
+      <AuthView 
+        onLogin={handleLogin} 
+        lang={lang} 
+        setLang={setLang} 
+        darkMode={darkMode}
+        toggleTheme={() => setDarkMode(!darkMode)}
+      />
+    );
+  }
+
+  // --- Main App ---
   const weekStart = getStartOfWeek(currentDate);
   const weekEnd = getEndOfWeek(currentDate);
   const weekRangeStr = `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`;
@@ -203,10 +177,10 @@ const App: React.FC = () => {
       <aside className="w-full md:w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 md:h-screen flex md:flex-col sticky top-0 z-30 transition-colors duration-200">
         <div className="p-6 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-indigo-200 dark:shadow-none shadow-lg">
-               <div className="w-3 h-3 bg-white rounded-full opacity-60" />
+            <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center shadow-lg shadow-orange-200 dark:shadow-none">
+               <div className="w-3 h-3 bg-white/40 rounded-full" />
             </div>
-            <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">HabitFlow</span>
+            <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">{t.app_name}</span>
           </div>
           {/* Mobile Theme Toggle */}
           <button 
@@ -222,62 +196,87 @@ const App: React.FC = () => {
             onClick={() => setView('dashboard')}
             className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mb-1 ${
               view === 'dashboard' 
-                ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 font-medium' 
+                ? 'bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 font-medium' 
                 : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             <LayoutDashboard size={20} />
-            <span>Weekly Heatmap</span>
+            <span>{t.weekly_focus}</span>
           </button>
           
           <button
             onClick={() => setView('stats')}
             className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mb-1 ${
               view === 'stats' 
-                ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 font-medium' 
+                ? 'bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 font-medium' 
                 : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             <BarChart2 size={20} />
-            <span>Statistics</span>
+            <span>{t.stats}</span>
           </button>
 
            <button
             onClick={() => setView('profile')}
-            className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all ${
+            className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mb-1 ${
               view === 'profile' 
-                ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 font-medium' 
+                ? 'bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 font-medium' 
                 : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
-            <User size={20} />
-            <span>Profile</span>
+            <UserIcon size={20} />
+            <span>{t.profile}</span>
           </button>
+
+          {currentUser.role === 'admin' && (
+            <button
+              onClick={() => setView('admin')}
+              className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mt-4 ${
+                view === 'admin' 
+                  ? 'bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300 font-medium' 
+                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Shield size={20} />
+              <span>{t.admin}</span>
+            </button>
+          )}
         </nav>
 
         <div className="p-4 hidden md:block mt-auto space-y-4">
-           {/* Desktop Theme Toggle */}
-           <div className="flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Theme</span>
+           {/* Controls */}
+           <div className="grid grid-cols-2 gap-2">
+             <button 
+                onClick={() => setLang(lang === 'en' ? 'ja' : 'en')}
+                className="flex items-center justify-center p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all border border-slate-100 dark:border-slate-800"
+                title="Change Language"
+              >
+                <Languages size={18} />
+              </button>
               <button 
                 onClick={() => setDarkMode(!darkMode)}
-                className="p-2 text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700 rounded-lg transition-all shadow-sm"
+                className="flex items-center justify-center p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl transition-all border border-slate-100 dark:border-slate-800"
+                title="Toggle Theme"
               >
                 {darkMode ? <Sun size={18} /> : <Moon size={18} />}
               </button>
            </div>
+           
+           <div className="px-4 py-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl flex items-center justify-between">
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate max-w-[100px]">
+                {currentUser.displayName}
+              </span>
+              <button onClick={handleLogout} className="text-slate-400 hover:text-red-500">
+                <LogOut size={16} />
+              </button>
+           </div>
 
-           {syncStatus === 'syncing' && (
-             <div className="flex items-center justify-center text-xs text-slate-400 dark:text-slate-500 mb-2">
-                <Loader2 size={12} className="animate-spin mr-1" /> Syncing...
-             </div>
-           )}
            <button
              onClick={() => setIsModalOpen(true)}
-             className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-200 dark:shadow-none flex items-center justify-center space-x-2 transition-transform active:scale-95"
+             className="w-full py-3 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white rounded-xl shadow-lg shadow-orange-200 dark:shadow-none flex items-center justify-center space-x-2 transition-transform active:scale-95"
            >
              <Plus size={20} />
-             <span>New Habit</span>
+             <span>{t.new_habit}</span>
            </button>
         </div>
       </aside>
@@ -287,14 +286,16 @@ const App: React.FC = () => {
         <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-              {view === 'dashboard' && 'Weekly Focus'}
-              {view === 'stats' && 'Performance'}
-              {view === 'profile' && 'Your Profile'}
+              {view === 'dashboard' && t.weekly_focus}
+              {view === 'stats' && t.performance}
+              {view === 'profile' && t.profile}
+              {view === 'admin' && t.admin}
             </h1>
             <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-              {view === 'dashboard' && 'Track your consistency day by day.'}
-              {view === 'stats' && 'Analyze your long-term progress.'}
-              {view === 'profile' && 'Manage data and cloud sync.'}
+              {view === 'dashboard' && t.track_desc}
+              {view === 'stats' && t.analyze_desc}
+              {view === 'profile' && t.manage_desc}
+              {view === 'admin' && t.admin_desc}
             </p>
           </div>
 
@@ -328,21 +329,28 @@ const App: React.FC = () => {
                currentDate={currentDate}
                onToggle={toggleHabit}
                onDelete={deleteHabit}
+               lang={lang}
              />
           )}
 
           {view === 'stats' && (
-            <ChartsView habits={habits} darkMode={darkMode} />
+            <ChartsView habits={habits} darkMode={darkMode} lang={lang} />
           )}
 
           {view === 'profile' && (
             <ProfileView 
-              user={user}
-              config={driveConfig}
-              onSaveConfig={saveDriveConfig}
-              onSignIn={handleSignIn}
-              onSignOut={handleSignOut}
-              isDriveConnected={isDriveConnected}
+              habits={habits}
+              onImport={handleImportData}
+              onClearData={handleClearData}
+              lang={lang}
+            />
+          )}
+
+          {view === 'admin' && currentUser.role === 'admin' && (
+            <AdminView 
+              users={allUsers}
+              onDeleteUser={handleDeleteUser}
+              lang={lang}
             />
           )}
         </div>
@@ -351,7 +359,7 @@ const App: React.FC = () => {
       {/* Mobile FAB */}
       <button
         onClick={() => setIsModalOpen(true)}
-        className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-indigo-600 text-white rounded-full shadow-xl shadow-indigo-300 dark:shadow-none flex items-center justify-center z-50 active:scale-90 transition-transform"
+        className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-orange-500 text-white rounded-full shadow-xl shadow-orange-300 dark:shadow-none flex items-center justify-center z-50 active:scale-90 transition-transform"
       >
         <Plus size={28} />
       </button>
@@ -360,6 +368,7 @@ const App: React.FC = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAdd={addHabit}
+        lang={lang}
       />
     </div>
   );
