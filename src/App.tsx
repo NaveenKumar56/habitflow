@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, LayoutDashboard, BarChart2, User as UserIcon, ChevronLeft, ChevronRight, Moon, Sun, Languages, LogOut } from 'lucide-react';
+import { Plus, LayoutDashboard, BarChart2, User as UserIcon, ChevronLeft, ChevronRight, Moon, Sun, Languages, LogOut, Shield } from 'lucide-react';
 import { format, addWeeks, addDays } from 'date-fns';
 import { Habit, HabitCategory, User, Language } from './types';
 import { loadHabits, saveHabitToCloud, deleteHabitFromCloud, syncAllHabits, clearAllCloudData } from './services/storageService';
@@ -11,6 +11,7 @@ import { ChartsView } from './components/ChartsView';
 import { WeeklyHeatmap } from './components/WeeklyHeatmap';
 import { ProfileView } from './components/ProfileView';
 import { AuthView } from './components/AuthView';
+import { AdminView } from './components/AdminView';
 
 const generateId = () => crypto.randomUUID();
 
@@ -62,13 +63,17 @@ const App: React.FC = () => {
 
   // Auth Listener (Supabase)
   useEffect(() => {
+    const checkUserRole = (email: string | undefined) => {
+        return email === 'naveenzcnk@gmail.com' ? 'admin' : 'user';
+    };
+
     // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setCurrentUser({ 
             id: session.user.id, 
             email: session.user.email || '',
-            role: 'user' // Default role for now
+            role: checkUserRole(session.user.email)
         });
       }
       setLoading(false);
@@ -82,7 +87,7 @@ const App: React.FC = () => {
         setCurrentUser({ 
             id: session.user.id, 
             email: session.user.email || '',
-            role: 'user' 
+            role: checkUserRole(session.user.email)
         });
       } else {
         setCurrentUser(null);
@@ -234,6 +239,20 @@ const App: React.FC = () => {
             <UserIcon size={20} />
             <span>{t.profile}</span>
           </button>
+
+          {currentUser.role === 'admin' && (
+            <button
+              onClick={() => setView('admin')}
+              className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mt-4 ${
+                view === 'admin' 
+                  ? 'bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300 font-medium' 
+                  : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+              }`}
+            >
+              <Shield size={20} />
+              <span>{t.admin}</span>
+            </button>
+          )}
         </nav>
 
         <div className="p-4 hidden md:block mt-auto space-y-4">
@@ -282,11 +301,13 @@ const App: React.FC = () => {
               {view === 'dashboard' && t.weekly_focus}
               {view === 'stats' && t.performance}
               {view === 'profile' && t.profile}
+              {view === 'admin' && t.admin}
             </h1>
             <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
               {view === 'dashboard' && t.track_desc}
               {view === 'stats' && t.analyze_desc}
               {view === 'profile' && t.manage_desc}
+              {view === 'admin' && t.admin_desc}
             </p>
           </div>
 
@@ -333,6 +354,14 @@ const App: React.FC = () => {
               habits={habits}
               onImport={handleImportData}
               onClearData={handleClearData}
+              lang={lang}
+            />
+          )}
+
+          {view === 'admin' && currentUser.role === 'admin' && (
+            <AdminView 
+              users={[]} 
+              onDeleteUser={() => {}}
               lang={lang}
             />
           )}
