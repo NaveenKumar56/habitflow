@@ -51,7 +51,7 @@ export const AddHabitModal: React.FC<AddHabitModalProps> = ({ isOpen, onClose, o
                 onChange={(e) => setTitle((e.target as HTMLInputElement).value)}
                 placeholder={t.habit_placeholder}
                 class="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none transition-all"
-                autoFocus
+                autofocus
               />
             </div>
 

@@ -124,7 +124,7 @@ export const AuthView: React.FC<AuthViewProps> = ({ lang, setLang, darkMode, tog
                 type="button" 
                 onClick={() => setShowPassword(!showPassword)}
                 class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
-                tabIndex={-1}
+                tabindex={-1}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
