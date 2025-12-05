@@ -10,12 +10,6 @@ export interface Habit {
 
 export type HabitCategory = 'Health' | 'Productivity' | 'Mindfulness' | 'Learning' | 'Social' | 'Other';
 
-export interface AIHabitSuggestion {
-  title: string;
-  category: HabitCategory;
-  reason: string;
-}
-
 export interface DayStat {
   date: string;
   completedCount: number;
