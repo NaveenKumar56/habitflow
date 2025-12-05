@@ -114,7 +114,7 @@ export const loadDiaryEntries = async (): Promise<DiaryEntry[]> => {
 
 export const saveDiaryEntry = async (entry: DiaryEntry) => {
     const user = (await supabase.auth.getUser()).data.user;
-    if (!user) return;
+    if (!user) return { error: "No user logged in" };
 
     const { error } = await supabase
         .from('diary_entries')
@@ -128,6 +128,7 @@ export const saveDiaryEntry = async (entry: DiaryEntry) => {
         });
 
     if (error) console.error("Error saving diary:", error);
+    return { error };
 }
 
 // --- Todo Management ---
@@ -158,7 +159,7 @@ export const loadTodos = async (): Promise<Todo[]> => {
 
 export const saveTodo = async (todo: Todo) => {
   const user = (await supabase.auth.getUser()).data.user;
-  if (!user) return;
+  if (!user) return { error: "No user logged in" };
 
   const { error } = await supabase
     .from('todos')
@@ -170,7 +171,11 @@ export const saveTodo = async (todo: Todo) => {
       created_at: todo.createdAt
     });
 
-  if (error) console.error("Error saving todo:", error);
+  if (error) {
+      console.error("Error saving todo:", error);
+      return { error };
+  }
+  return { error: null };
 };
 
 export const deleteTodo = async (id: string) => {
