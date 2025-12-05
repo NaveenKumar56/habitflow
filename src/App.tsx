@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, LayoutDashboard, BarChart2, User as UserIcon, ChevronLeft, ChevronRight, Moon, Sun, Languages, LogOut, Shield, Menu, PanelLeftClose, Book, ListTodo } from 'lucide-react';
+import { Plus, LayoutDashboard, BarChart2, User as UserIcon, ChevronLeft, ChevronRight, Moon, Sun, Languages, LogOut, Shield, Menu, PanelLeftClose, Book, ListTodo, Download } from 'lucide-react';
 import { format, addWeeks, addDays } from 'date-fns';
 import { Habit, HabitCategory, User, Language } from './types';
 import { loadHabits, saveHabitToCloud, deleteHabitFromCloud, syncAllHabits, clearAllCloudData } from './services/storageService';
@@ -40,6 +40,9 @@ const App: React.FC = () => {
   const [view, setView] = useState<'dashboard' | 'stats' | 'profile' | 'admin' | 'diary' | 'tasks'>('dashboard');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  
+  // PWA Install State
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   
   // Settings State
   const [lang, setLang] = useState<Language>('en');
@@ -100,6 +103,23 @@ const App: React.FC = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // PWA Install Prompt Listener
+  useEffect(() => {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    });
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
 
   // Load Data when User Changes
   useEffect(() => {
@@ -307,6 +327,17 @@ const App: React.FC = () => {
         </nav>
 
         <div className="p-4 hidden md:block mt-auto space-y-4 min-w-[250px]">
+           {/* Install PWA Button - Only visible if installable */}
+           {deferredPrompt && (
+              <button 
+                onClick={handleInstallClick}
+                className="w-full flex items-center justify-center gap-2 p-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl font-medium transition-all hover:bg-slate-800 dark:hover:bg-slate-100 mb-2"
+              >
+                <Download size={18} />
+                <span>Install App</span>
+              </button>
+           )}
+
            {/* Controls */}
            <div className="grid grid-cols-2 gap-2">
              <button 
