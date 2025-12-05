@@ -1,0 +1,5 @@
+{
+  "name": "HabitFlow - AI Habit Tracker",
+  "description": "A modern, persistent, local-first habit tracker with Gemini AI integration to suggest personalized habits and visualize progress.",
+  "requestFramePermissions": []
+}
