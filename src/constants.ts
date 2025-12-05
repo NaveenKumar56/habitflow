@@ -1,4 +1,3 @@
-
 import { HabitCategory, Language } from './types';
 
 export const CATEGORIES: HabitCategory[] = [
@@ -18,25 +17,6 @@ export const CATEGORY_COLORS: Record<HabitCategory, string> = {
   Social: 'bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20',
   Other: 'bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-700/50 dark:text-slate-300 dark:border-slate-600',
 };
-
-export const DEFAULT_HABITS = [
-  {
-    id: '1',
-    title: 'Drink 2L Water',
-    category: 'Health',
-    color: 'emerald',
-    createdAt: new Date().toISOString(),
-    logs: {}
-  },
-  {
-    id: '2',
-    title: 'Read 15 mins',
-    category: 'Learning',
-    color: 'amber',
-    createdAt: new Date().toISOString(),
-    logs: {}
-  }
-];
 
 export const TRANSLATIONS: Record<Language, Record<string, string>> = {
   en: {
@@ -101,6 +81,7 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     delete_user: 'Delete User',
     delete_user_confirm: 'Are you sure you want to delete this user and ALL their data? This cannot be undone.',
     save_entry: 'Save Entry',
+    entry_saved: 'Diary entry saved!',
     todays_mood: "Today's Mood",
     write_diary: 'Write about this day...',
     no_entries: 'No diary entries yet.',
@@ -170,6 +151,7 @@ export const TRANSLATIONS: Record<Language, Record<string, string>> = {
     delete_user: 'ユーザーを削除',
     delete_user_confirm: 'このユーザーとすべてのデータを削除してもよろしいですか？この操作は取り消せません。',
     save_entry: '保存',
+    entry_saved: '日記のエントリーが保存されました！',
     todays_mood: '今日の気分',
     write_diary: '今日について書く...',
     no_entries: '日記のエントリーはまだありません。',

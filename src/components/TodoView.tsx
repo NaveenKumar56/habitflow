@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Todo, Language } from '../types';
 import { TRANSLATIONS } from '../constants';
@@ -31,16 +30,14 @@ export const TodoView: React.FC<TodoViewProps> = ({ lang }) => {
       createdAt: new Date().toISOString()
     };
 
-    // Optimistic Update
     const prevTodos = [...todos];
     setTodos([newTodo, ...todos]);
     setNewTitle('');
 
     const { error: saveError } = await saveTodo(newTodo);
     if (saveError) {
-        setTodos(prevTodos); // Revert
-        setError('Failed to save task. Please check your connection.');
-        alert('Error saving task: ' + JSON.stringify(saveError));
+        setTodos(prevTodos);
+        setError('Failed to save task. Check your connection or table.');
     }
   };
 
@@ -53,9 +50,7 @@ export const TodoView: React.FC<TodoViewProps> = ({ lang }) => {
     const target = updated.find(t => t.id === id);
     if (target) {
         const { error: saveError } = await saveTodo(target);
-        if (saveError) {
-             alert('Error updating task: ' + JSON.stringify(saveError));
-        }
+        if (saveError) setError('Sync error.');
     }
   };
 
@@ -68,73 +63,69 @@ export const TodoView: React.FC<TodoViewProps> = ({ lang }) => {
   const completedTodos = todos.filter(t => t.completed);
 
   return (
-    <div className="max-w-3xl mx-auto animate-fade-in space-y-6">
+    <div class="max-w-3xl mx-auto animate-fade-in space-y-6">
       
-      {/* Header & Input */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg text-blue-600 dark:text-blue-400">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg text-blue-600 dark:text-blue-400">
              <ListTodo size={24} />
           </div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{t.tasks}</h2>
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white">{t.tasks}</h2>
         </div>
 
         {error && (
-            <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg flex items-center gap-2 text-sm">
+            <div class="mb-4 p-3 bg-red-50 text-red-600 rounded-lg flex items-center gap-2 text-sm">
                 <AlertTriangle size={16} />
                 {error}
             </div>
         )}
 
-        <form onSubmit={handleAdd} className="flex gap-3">
+        <form onSubmit={handleAdd} class="flex gap-3">
           <input
             type="text"
             value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
+            onChange={(e) => setNewTitle((e.target as HTMLInputElement).value)}
             placeholder={t.add_task}
-            className="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none dark:text-white transition-all"
+            class="flex-1 px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none dark:text-white transition-all"
           />
           <button 
             type="submit"
             disabled={!newTitle.trim()}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus size={24} />
           </button>
         </form>
       </div>
 
-      {/* Lists */}
-      <div className="grid gap-6">
-         {/* Active */}
-         <div className="space-y-2">
+      <div class="grid gap-6">
+         <div class="space-y-2">
            {activeTodos.map(todo => (
-             <div key={todo.id} className="group flex items-center gap-3 p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all">
-               <button onClick={() => handleToggle(todo.id)} className="text-slate-400 hover:text-blue-600 transition-colors">
+             <div key={todo.id} class="group flex items-center gap-3 p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all">
+               <button onClick={() => handleToggle(todo.id)} class="text-slate-400 hover:text-blue-600 transition-colors">
                  <Circle size={24} />
                </button>
-               <span className="flex-1 font-medium text-slate-800 dark:text-slate-200">{todo.title}</span>
-               <button onClick={() => handleDelete(todo.id)} className="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
+               <span class="flex-1 font-medium text-slate-800 dark:text-slate-200">{todo.title}</span>
+               <button onClick={() => handleDelete(todo.id)} class="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
                  <Trash2 size={20} />
                </button>
              </div>
            ))}
            {activeTodos.length === 0 && todos.length === 0 && (
-             <p className="text-center text-slate-400 py-8">{t.no_tasks}</p>
+             <p class="text-center text-slate-400 py-8">{t.no_tasks}</p>
            )}
          </div>
 
-         {/* Completed */}
          {completedTodos.length > 0 && (
-           <div className="space-y-2 opacity-60">
-             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider px-2">Completed</h3>
+           <div class="space-y-2 opacity-60">
+             <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wider px-2">Completed</h3>
              {completedTodos.map(todo => (
-               <div key={todo.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-slate-100 dark:border-slate-800/50">
-                 <button onClick={() => handleToggle(todo.id)} className="text-emerald-500">
+               <div key={todo.id} class="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-950/50 rounded-xl border border-slate-100 dark:border-slate-800/50">
+                 <button onClick={() => handleToggle(todo.id)} class="text-emerald-500">
                    <CheckCircle size={24} />
                  </button>
-                 <span className="flex-1 font-medium text-slate-500 line-through">{todo.title}</span>
-                 <button onClick={() => handleDelete(todo.id)} className="text-slate-300 hover:text-red-500">
+                 <span class="flex-1 font-medium text-slate-500 line-through">{todo.title}</span>
+                 <button onClick={() => handleDelete(todo.id)} class="text-slate-300 hover:text-red-500">
                    <Trash2 size={20} />
                  </button>
                </div>

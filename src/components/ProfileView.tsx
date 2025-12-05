@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import { Habit, Language } from '../types';
 import { Download, Upload, Trash2, Database, Smartphone } from 'lucide-react';
@@ -50,46 +49,46 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ habits, onImport, onCl
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-8 animate-fade-in">
+    <div class="max-w-2xl mx-auto space-y-8 animate-fade-in">
       
       {/* Intro Card */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 shadow-sm border border-slate-200 dark:border-slate-800 text-center transition-colors">
-        <div className="w-20 h-20 bg-orange-50 dark:bg-orange-500/10 rounded-full mx-auto mb-4 flex items-center justify-center text-orange-600 dark:text-orange-400">
+      <div class="bg-white dark:bg-slate-900 rounded-2xl p-8 shadow-sm border border-slate-200 dark:border-slate-800 text-center transition-colors">
+        <div class="w-20 h-20 bg-orange-50 dark:bg-orange-500/10 rounded-full mx-auto mb-4 flex items-center justify-center text-orange-600 dark:text-orange-400">
           <Database size={32} />
         </div>
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">{t.local_management}</h2>
-        <p className="text-slate-500 dark:text-slate-400 mt-2 max-w-md mx-auto">
+        <h2 class="text-2xl font-bold text-slate-900 dark:text-white">{t.local_management}</h2>
+        <p class="text-slate-500 dark:text-slate-400 mt-2 max-w-md mx-auto">
           {t.local_management_desc}
         </p>
       </div>
 
       {/* Actions Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         
         {/* Export */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col items-center text-center transition-colors">
-          <div className="p-3 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl mb-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col items-center text-center transition-colors">
+          <div class="p-3 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl mb-4">
             <Download size={24} />
           </div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">{t.backup_data}</h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1">{t.backup_data}</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">
             JSON
           </p>
           <button 
             onClick={handleDownload}
-            className="mt-auto w-full py-2.5 bg-slate-900 dark:bg-orange-600 text-white rounded-lg font-medium hover:bg-slate-800 dark:hover:bg-orange-700 transition-colors flex items-center justify-center"
+            class="mt-auto w-full py-2.5 bg-slate-900 dark:bg-orange-600 text-white rounded-lg font-medium hover:bg-slate-800 dark:hover:bg-orange-700 transition-colors flex items-center justify-center"
           >
             {t.download_backup}
           </button>
         </div>
 
         {/* Import */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col items-center text-center transition-colors">
-           <div className="p-3 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl mb-4">
+        <div class="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col items-center text-center transition-colors">
+           <div class="p-3 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl mb-4">
             <Upload size={24} />
           </div>
-          <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">{t.restore_data}</h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-1">{t.restore_data}</h3>
+          <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">
             JSON
           </p>
           <input 
@@ -97,11 +96,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ habits, onImport, onCl
             accept=".json" 
             ref={fileInputRef}
             onChange={handleFileChange}
-            className="hidden" 
+            class="hidden" 
           />
           <button 
             onClick={() => fileInputRef.current?.click()}
-            className="mt-auto w-full py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center"
+            class="mt-auto w-full py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center"
           >
             {t.select_file}
           </button>
@@ -110,28 +109,28 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ habits, onImport, onCl
       </div>
 
       {/* Danger Zone */}
-      <div className="bg-red-50 dark:bg-red-900/10 rounded-2xl p-6 border border-red-100 dark:border-red-900/20 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-start">
-           <div className="p-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg mr-4 shrink-0">
+      <div class="bg-red-50 dark:bg-red-900/10 rounded-2xl p-6 border border-red-100 dark:border-red-900/20 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="flex items-start">
+           <div class="p-2 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg mr-4 shrink-0">
              <Trash2 size={20} />
            </div>
            <div>
-             <h3 className="text-lg font-bold text-red-900 dark:text-red-300">{t.danger_zone}</h3>
-             <p className="text-sm text-red-700 dark:text-red-400">
+             <h3 class="text-lg font-bold text-red-900 dark:text-red-300">{t.danger_zone}</h3>
+             <p class="text-sm text-red-700 dark:text-red-400">
                {t.delete_all_desc}
              </p>
            </div>
         </div>
         <button 
           onClick={onClearData}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors whitespace-nowrap"
+          class="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors whitespace-nowrap"
         >
           {t.clear_data}
         </button>
       </div>
 
       {/* Info Footer */}
-      <div className="flex items-center justify-center gap-2 text-slate-400 text-sm">
+      <div class="flex items-center justify-center gap-2 text-slate-400 text-sm">
         <Smartphone size={14} />
         <span>Yuuhi Tracker v2.0</span>
       </div>

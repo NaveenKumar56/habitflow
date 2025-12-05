@@ -40,11 +40,11 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, selectedDate, onTog
   const categoryStyle = CATEGORY_COLORS[habit.category as HabitCategory] || CATEGORY_COLORS.Other;
 
   return (
-    <div className="group flex items-center justify-between p-4 bg-white rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition-all duration-200">
-      <div className="flex items-center space-x-4">
+    <div class="group flex items-center justify-between p-4 bg-white rounded-xl shadow-sm border border-slate-100 hover:shadow-md transition-all duration-200">
+      <div class="flex items-center space-x-4">
         <button
           onClick={() => onToggle(habit.id, dateStr)}
-          className={`
+          class={`
             relative flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all duration-200
             ${isCompleted 
               ? 'bg-indigo-600 border-indigo-600 text-white' 
@@ -52,20 +52,20 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, selectedDate, onTog
           `}
           aria-label={isCompleted ? "Mark as incomplete" : "Mark as complete"}
         >
-          <Check size={16} strokeWidth={3} className={`transform transition-transform ${isCompleted ? 'scale-100' : 'scale-0'}`} />
+          <Check size={16} strokeWidth={3} class={`transform transition-transform ${isCompleted ? 'scale-100' : 'scale-0'}`} />
         </button>
 
         <div>
-          <h3 className={`font-semibold text-slate-800 ${isCompleted ? 'line-through text-slate-400' : ''}`}>
+          <h3 class={`font-semibold text-slate-800 ${isCompleted ? 'line-through text-slate-400' : ''}`}>
             {habit.title}
           </h3>
-          <div className="flex items-center mt-1 space-x-2">
-            <span className={`text-xs px-2 py-0.5 rounded-full border ${categoryStyle}`}>
+          <div class="flex items-center mt-1 space-x-2">
+            <span class={`text-xs px-2 py-0.5 rounded-full border ${categoryStyle}`}>
               {habit.category}
             </span>
             {streak > 0 && (
-              <span className="flex items-center text-xs font-medium text-orange-500">
-                <Flame size={12} className="mr-1 fill-orange-500" />
+              <span class="flex items-center text-xs font-medium text-orange-500">
+                <Flame size={12} class="mr-1 fill-orange-500" />
                 {streak} day streak
               </span>
             )}
@@ -75,7 +75,7 @@ export const HabitCard: React.FC<HabitCardProps> = ({ habit, selectedDate, onTog
 
       <button
         onClick={() => onDelete(habit.id)}
-        className="text-slate-300 hover:text-red-500 p-2 rounded-full hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+        class="text-slate-300 hover:text-red-500 p-2 rounded-full hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
         aria-label="Delete habit"
       >
         <Trash2 size={18} />

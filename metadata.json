@@ -1,5 +1,5 @@
 {
   "name": "Yuuhi Tracker",
-  "description": "A persistent, local-first habit tracker with multi-language support.",
+  "description": "A persistent, cloud-synced habit tracker with Diary and Todo features.",
   "requestFramePermissions": []
 }

@@ -1,4 +1,3 @@
-
 export interface Habit {
   id: string;
   title: string;
@@ -10,16 +9,9 @@ export interface Habit {
 
 export type HabitCategory = 'Health' | 'Productivity' | 'Mindfulness' | 'Learning' | 'Social' | 'Other';
 
-export interface DayStat {
-  date: string;
-  completedCount: number;
-  totalHabits: number;
-}
-
 export interface User {
   id: string;
   email: string;
-  username?: string; // Metadata
   role?: 'admin' | 'user';
 }
 
