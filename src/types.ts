@@ -31,4 +31,11 @@ export interface DiaryEntry {
   createdAt: string;
 }
 
+export interface Todo {
+  id: string;
+  title: string;
+  completed: boolean;
+  createdAt: string;
+}
+
 export type Language = 'en' | 'ja';

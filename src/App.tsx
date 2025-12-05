@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, LayoutDashboard, BarChart2, User as UserIcon, ChevronLeft, ChevronRight, Moon, Sun, Languages, LogOut, Shield, Menu, PanelLeftClose, Book } from 'lucide-react';
+import { Plus, LayoutDashboard, BarChart2, User as UserIcon, ChevronLeft, ChevronRight, Moon, Sun, Languages, LogOut, Shield, Menu, PanelLeftClose, Book, ListTodo } from 'lucide-react';
 import { format, addWeeks, addDays } from 'date-fns';
 import { Habit, HabitCategory, User, Language } from './types';
 import { loadHabits, saveHabitToCloud, deleteHabitFromCloud, syncAllHabits, clearAllCloudData } from './services/storageService';
@@ -13,6 +13,7 @@ import { ProfileView } from './components/ProfileView';
 import { AuthView } from './components/AuthView';
 import { AdminView } from './components/AdminView';
 import { DiaryView } from './components/DiaryView';
+import { TodoView } from './components/TodoView';
 
 const generateId = () => crypto.randomUUID();
 
@@ -36,7 +37,7 @@ const App: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   
   // UI State
-  const [view, setView] = useState<'dashboard' | 'stats' | 'profile' | 'admin' | 'diary'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'stats' | 'profile' | 'admin' | 'diary' | 'tasks'>('dashboard');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   
@@ -255,6 +256,18 @@ const App: React.FC = () => {
           </button>
 
           <button
+            onClick={() => setView('tasks')}
+            className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mb-1 shrink-0 ${
+              view === 'tasks' 
+                ? 'bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 font-medium' 
+                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+            }`}
+          >
+            <ListTodo size={20} />
+            <span>{t.tasks}</span>
+          </button>
+
+          <button
             onClick={() => setView('stats')}
             className={`flex items-center space-x-3 w-full px-4 py-3 rounded-xl transition-all mb-1 shrink-0 ${
               view === 'stats' 
@@ -343,6 +356,7 @@ const App: React.FC = () => {
                 {view === 'profile' && t.profile}
                 {view === 'admin' && t.admin}
                 {view === 'diary' && t.diary}
+                {view === 'tasks' && t.tasks}
               </h1>
               <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
                 {view === 'dashboard' && t.track_desc}
@@ -350,6 +364,7 @@ const App: React.FC = () => {
                 {view === 'profile' && t.manage_desc}
                 {view === 'admin' && t.admin_desc}
                 {view === 'diary' && t.diary_desc}
+                {view === 'tasks' && t.tasks_desc}
               </p>
             </div>
           </div>
@@ -403,6 +418,10 @@ const App: React.FC = () => {
 
            {view === 'diary' && (
             <DiaryView lang={lang} />
+          )}
+
+           {view === 'tasks' && (
+            <TodoView lang={lang} />
           )}
 
           {view === 'admin' && currentUser.role === 'admin' && (

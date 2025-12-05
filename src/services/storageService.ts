@@ -1,6 +1,6 @@
 
 import { supabase } from '../lib/supabase';
-import { Habit, DiaryEntry } from '../types';
+import { Habit, DiaryEntry, Todo } from '../types';
 
 // --- Cloud Data Management (Supabase) ---
 
@@ -82,6 +82,7 @@ export const clearAllCloudData = async () => {
     if (!user) return;
     await supabase.from('habits').delete().eq('user_id', user.id);
     await supabase.from('diary_entries').delete().eq('user_id', user.id);
+    await supabase.from('todos').delete().eq('user_id', user.id);
 };
 
 // --- Diary Management ---
@@ -128,3 +129,51 @@ export const saveDiaryEntry = async (entry: DiaryEntry) => {
 
     if (error) console.error("Error saving diary:", error);
 }
+
+// --- Todo Management ---
+
+export const loadTodos = async (): Promise<Todo[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('todos')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Error loading todos:", error);
+      return [];
+    }
+
+    return (data as any[]).map(t => ({
+      id: t.id,
+      title: t.title,
+      completed: t.completed,
+      createdAt: t.created_at
+    }));
+  } catch (error) {
+    console.error("Failed to load todos", error);
+    return [];
+  }
+};
+
+export const saveTodo = async (todo: Todo) => {
+  const user = (await supabase.auth.getUser()).data.user;
+  if (!user) return;
+
+  const { error } = await supabase
+    .from('todos')
+    .upsert({
+      id: todo.id,
+      user_id: user.id,
+      title: todo.title,
+      completed: todo.completed,
+      created_at: todo.createdAt
+    });
+
+  if (error) console.error("Error saving todo:", error);
+};
+
+export const deleteTodo = async (id: string) => {
+  const { error } = await supabase.from('todos').delete().eq('id', id);
+  if (error) console.error("Error deleting todo:", error);
+};
