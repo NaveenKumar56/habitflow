@@ -20,14 +20,3 @@ export interface DayStat {
   completedCount: number;
   totalHabits: number;
 }
-
-export interface UserProfile {
-  name: string;
-  email: string;
-  picture: string;
-}
-
-export interface DriveConfig {
-  clientId: string;
-  apiKey: string;
-}

@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, LayoutDashboard, BarChart2, User, ChevronLeft, ChevronRight, Loader2, Moon, Sun } from 'lucide-react';
+import { Plus, LayoutDashboard, BarChart2, Settings, ChevronLeft, ChevronRight, Moon, Sun } from 'lucide-react';
 import { format, addWeeks, addDays } from 'date-fns';
-import { Habit, HabitCategory, UserProfile, DriveConfig } from './types';
+import { Habit, HabitCategory } from './types';
 import { loadHabits, saveHabits as saveLocal } from './services/storageService';
 import { AddHabitModal } from './components/AddHabitModal';
 import { ChartsView } from './components/ChartsView';
 import { WeeklyHeatmap } from './components/WeeklyHeatmap';
 import { ProfileView } from './components/ProfileView';
-import * as driveService from './services/driveService';
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -30,8 +29,6 @@ const App: React.FC = () => {
   // UI State
   const [view, setView] = useState<'dashboard' | 'stats' | 'profile'>('dashboard');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'error'>('idle');
   
   // Theme State
   const [darkMode, setDarkMode] = useState(() => {
@@ -41,15 +38,6 @@ const App: React.FC = () => {
     }
     return false;
   });
-
-  // Auth & Config State
-  const [user, setUser] = useState<UserProfile | null>(null);
-  const [driveConfig, setDriveConfig] = useState<DriveConfig>(() => {
-    const saved = localStorage.getItem('habitflow_drive_config');
-    return saved ? JSON.parse(saved) : { clientId: '', apiKey: '' };
-  });
-  const [tokenClient, setTokenClient] = useState<any>(null);
-  const [isDriveConnected, setIsDriveConnected] = useState(false);
 
   // Apply Theme
   useEffect(() => {
@@ -62,109 +50,16 @@ const App: React.FC = () => {
     }
   }, [darkMode]);
 
-  // 1. Initial Load (Local)
+  // Initial Load (Local)
   useEffect(() => {
     const loaded = loadHabits();
     setHabits(loaded);
-    setIsLoading(false);
   }, []);
 
-  // 2. Initialize Google Drive Clients if Config exists
-  useEffect(() => {
-    if (driveConfig.clientId && !isDriveConnected) {
-      const initializeGoogle = async () => {
-        try {
-          // Init GAPI for file operations
-          await driveService.initGapiClient(driveConfig.apiKey, driveConfig.clientId);
-          
-          // Init Token Client for Auth
-          const client = driveService.initTokenClient(driveConfig.clientId, async (response) => {
-            if (response.error) {
-              console.error("Auth Error:", response);
-              alert("Sign-in failed: " + response.error + "\nCheck the troubleshooting tips in the Profile section.");
-              return;
-            }
-            if (response.access_token) {
-              setIsDriveConnected(true);
-              // Simplistic user info
-              setUser({ name: 'Google User', email: 'Connected', picture: '' }); 
-              await syncWithDrive();
-            }
-          });
-          setTokenClient(client);
-        } catch (error) {
-          console.error("Failed to init Google Drive:", error);
-        }
-      };
-      initializeGoogle();
-    }
-  }, [driveConfig]);
-
-  // 3. Sync Logic
-  const syncWithDrive = async () => {
-    if (!isDriveConnected) return;
-    setSyncStatus('syncing');
-    try {
-      const fileId = await driveService.findDataFile();
-      if (fileId) {
-        const cloudHabits = await driveService.loadDataFromFile(fileId);
-        setHabits(cloudHabits);
-        saveLocal(cloudHabits);
-      } else {
-        await driveService.createDataFile(habits);
-      }
-      setSyncStatus('idle');
-    } catch (error) {
-      console.error("Sync failed", error);
-      setSyncStatus('error');
-    }
-  };
-
-  const handleSignIn = () => {
-    if (tokenClient) {
-      tokenClient.requestAccessToken({ prompt: 'consent' });
-    } else {
-      alert("Please configure Client ID in Profile first.");
-      setView('profile');
-    }
-  };
-
-  const handleSignOut = () => {
-    const token = window.gapi?.client?.getToken();
-    if (token) {
-      window.google?.accounts?.oauth2?.revoke(token.access_token, () => {
-        console.log('Revoked');
-      });
-      window.gapi.client.setToken('');
-    }
-    setUser(null);
-    setIsDriveConnected(false);
-  };
-
-  const saveDriveConfig = (config: DriveConfig) => {
-    setDriveConfig(config);
-    localStorage.setItem('habitflow_drive_config', JSON.stringify(config));
-  };
-
-  // 4. Data Operations
-  const saveAll = async (newHabits: Habit[]) => {
+  // Data Operations
+  const saveAll = (newHabits: Habit[]) => {
     setHabits(newHabits);
     saveLocal(newHabits);
-    
-    if (isDriveConnected) {
-      setSyncStatus('syncing');
-      try {
-        const fileId = await driveService.findDataFile();
-        if (fileId) {
-          await driveService.updateDataFile(fileId, newHabits);
-        } else {
-          await driveService.createDataFile(newHabits);
-        }
-        setSyncStatus('idle');
-      } catch (err) {
-        setSyncStatus('error');
-      }
-    }
   };
 
   const toggleHabit = (id: string, dateStr: string) => {
@@ -191,12 +86,23 @@ const App: React.FC = () => {
   };
 
   const deleteHabit = (id: string) => {
-    if (window.confirm("Are you sure?")) {
+    if (window.confirm("Are you sure you want to delete this habit?")) {
       saveAll(habits.filter(h => h.id !== id));
     }
   };
 
-  // 5. Render
+  const handleImportData = (importedHabits: Habit[]) => {
+    saveAll(importedHabits);
+    alert('Data imported successfully!');
+  };
+
+  const handleClearData = () => {
+    if (window.confirm("Are you sure? This will delete all your habits permanently.")) {
+      saveAll([]);
+    }
+  };
+
+  // Render
   const weekStart = getStartOfWeek(currentDate);
   const weekEnd = getEndOfWeek(currentDate);
   const weekRangeStr = `${format(weekStart, 'MMM d')} - ${format(weekEnd, 'MMM d, yyyy')}`;
@@ -255,8 +161,8 @@ const App: React.FC = () => {
                 : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
-            <User size={20} />
-            <span>Profile</span>
+            <Settings size={20} />
+            <span>Settings</span>
           </button>
         </nav>
 
@@ -272,11 +178,6 @@ const App: React.FC = () => {
               </button>
            </div>
 
-           {syncStatus === 'syncing' && (
-             <div className="flex items-center justify-center text-xs text-slate-400 dark:text-slate-500 mb-2">
-                <Loader2 size={12} className="animate-spin mr-1" /> Syncing...
-             </div>
-           )}
            <button
              onClick={() => setIsModalOpen(true)}
              className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-200 dark:shadow-none flex items-center justify-center space-x-2 transition-transform active:scale-95"
@@ -294,12 +195,12 @@ const App: React.FC = () => {
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
               {view === 'dashboard' && 'Weekly Focus'}
               {view === 'stats' && 'Performance'}
-              {view === 'profile' && 'Your Profile'}
+              {view === 'profile' && 'Data & Settings'}
             </h1>
             <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
               {view === 'dashboard' && 'Track your consistency day by day.'}
               {view === 'stats' && 'Analyze your long-term progress.'}
-              {view === 'profile' && 'Manage data and cloud sync.'}
+              {view === 'profile' && 'Manage your local data.'}
             </p>
           </div>
 
@@ -342,12 +243,9 @@ const App: React.FC = () => {
 
           {view === 'profile' && (
             <ProfileView 
-              user={user}
-              config={driveConfig}
-              onSaveConfig={saveDriveConfig}
-              onSignIn={handleSignIn}
-              onSignOut={handleSignOut}
-              isDriveConnected={isDriveConnected}
+              habits={habits}
+              onImport={handleImportData}
+              onClearData={handleClearData}
             />
           )}
         </div>
