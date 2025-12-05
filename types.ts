@@ -20,3 +20,11 @@ export interface DayStat {
   completedCount: number;
   totalHabits: number;
 }
+
+export interface User {
+  username: string;
+  password: string; // Stored locally, ideally hashed but plain for this demo
+  displayName: string;
+}
+
+export type Language = 'en' | 'ja';

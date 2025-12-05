@@ -1,17 +1,9 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { AIHabitSuggestion } from "../types";
 
-// Note: In a real app, strict error handling for missing keys is needed.
-const getAIClient = () => {
-  if (!process.env.API_KEY) {
-    throw new Error("API Key is missing");
-  }
-  return new GoogleGenAI({ apiKey: process.env.API_KEY });
-};
-
 export const suggestHabitsFromGoal = async (goal: string): Promise<AIHabitSuggestion[]> => {
   try {
-    const ai = getAIClient();
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',

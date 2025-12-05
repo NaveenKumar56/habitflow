@@ -1,5 +1,5 @@
 {
-  "name": "HabitFlow - AI Habit Tracker",
-  "description": "A modern, persistent, local-first habit tracker with Gemini AI integration to suggest personalized habits and visualize progress.",
+  "name": "Yuuhi Tracker",
+  "description": "A persistent, local-first habit tracker with multi-language support.",
   "requestFramePermissions": []
 }

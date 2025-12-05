@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>HabitFlow</title>
+    <title>Yuuhi Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -14,6 +14,13 @@
               slate: {
                 850: '#1a202c',
                 950: '#020617',
+              },
+              yuuhi: {
+                50: '#fff7ed', // Orange-ish for Sunset (Yuuhi)
+                100: '#ffedd5',
+                500: '#f97316',
+                600: '#ea580c',
+                900: '#7c2d12',
               }
             }
           }
@@ -30,13 +37,12 @@
 {
   "imports": {
     "react": "https://aistudiocdn.com/react@^19.2.1",
-    "react-dom/client": "https://aistudiocdn.com/react-dom@^19.2.1/client",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
-    "date-fns": "https://aistudiocdn.com/date-fns@^4.1.0",
-    "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
     "react/": "https://aistudiocdn.com/react@^19.2.1/",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0"
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "date-fns": "https://aistudiocdn.com/date-fns@^4.1.0",
+    "recharts": "https://aistudiocdn.com/recharts@^3.5.1"
   }
 }
 </script>

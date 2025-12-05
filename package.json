@@ -1,5 +1,5 @@
 {
-  "name": "habitflow---ai-habit-tracker",
+  "name": "yuuhi-tracker",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,11 +10,11 @@
   },
   "dependencies": {
     "react": "^19.2.1",
+    "react-dom": "^19.2.1",
+    "@google/genai": "^1.31.0",
     "lucide-react": "^0.555.0",
     "date-fns": "^4.1.0",
-    "recharts": "^3.5.1",
-    "react-dom": "^19.2.1",
-    "@google/genai": "^1.31.0"
+    "recharts": "^3.5.1"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
