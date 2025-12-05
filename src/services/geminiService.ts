@@ -1,2 +1,2 @@
-// Gemini service has been removed.
+// This service has been removed.
 export {};
